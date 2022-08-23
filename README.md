@@ -2,7 +2,6 @@
 
 Easy to use, easy to set up.
 ```rust
-
 use rust_web_framework::*;
 
 /*- Initialize -*/
@@ -10,31 +9,21 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
-        Route::Stack("t1", &[
-            Route::Tail(Method::GET, "value", Function::S(|stream| {
-                std::thread::sleep(std::time::Duration::from_secs(10));
-                respond(stream, 200u16, Some(Respond {
-                    response_type: ResponseType::Text,
-                    content: "Hi".to_string()
-                }));
-            })),
-            Route::Stack("t2", &[
-                Route::Tail(Method::POST, "value", Function::S(|_| {println!("NOt should")})),
-                Route::Tail(Method::GET, "value", Function::S(|_| {println!("Yes should")})),
-                Route::Stack("t3", &[
-                    Route::Tail(Method::GET, "value", Function::S(|_| {println!("awod")})),
-                ]),
-            ]),
+        Route::Stack("path", &[
+            Route::Tail(Method::GET, "enpoint", Function::S(some_function)),
+            Route::Tail(Method::GET, "enpoint2", Function::S(some_other_function)),
         ]),
     ]);
 
     /*- Initiaize server -*/
     start(ServerConfig {
-        addr: "127.0.0.1",
-        port: 8080u16,
-        serve: Some("./static"),
-        not_found: Some("./static/404.html"),
+        addr: "127.0.0.1", // This will be localhost
+        port: 8080u16,     // Port, use 0.0.0.0 if using docker
+        serve: Some("./static"),              // Serve static files from a folder
+        not_found: Some("./static/404.html"), // Where to direct users going to a path which doesn't exist
         routes,
     }).unwrap();
+
+    // Go to 'localhost:8080/path/enpoint' to see results
 }
 ```
