@@ -1,0 +1,9 @@
+[package]
+name = "rust-web-framework"
+version = "0.1.0"
+edition = "2021"
+description = "Quickly crate API:s using this simple and lightweight framework."
+
+[dependencies]
+terminal-link = "0.1.0"
+ansi_term = "0.12.1"
