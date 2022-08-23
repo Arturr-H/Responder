@@ -7,12 +7,12 @@
 )]
 
 /*- Module imports -*/
-mod utils;
-mod request_info;
-mod respond;
+pub mod utils;
+pub mod request_info;
+pub mod respond;
 
 /*- Imports -*/
-use request_info::{ RequestInfo, Method };
+pub use request_info::{ RequestInfo, Method };
 use terminal_link::Link;
 use respond::{
     respond,
