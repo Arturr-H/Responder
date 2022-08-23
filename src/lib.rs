@@ -50,7 +50,7 @@ pub struct ServerConfig {
 
 /*- Send diffrent type of function -*/
 #[derive(Clone, Copy)]
-enum Function {
+pub enum Function {
     /// Function that takes only TcpStream as input,
     S(fn( &mut TcpStream )),
     
@@ -76,7 +76,7 @@ enum Function {
 }
 
 #[derive(Clone, Copy)]
-enum Route<'lf> {
+pub enum Route<'lf> {
     Stack(
         &'lf str,
         &'lf [Route<'lf>]
@@ -89,7 +89,7 @@ enum Route<'lf> {
 }
 
 /*- Starting server might fail so return Err(()) if so -*/
-fn start(__sconfig:ServerConfig) -> Result<(), Error> {
+pub fn start(__sconfig:ServerConfig) -> Result<(), Error> {
     let bind_to = &format!(
         "{}:{}",
         __sconfig.addr, __sconfig.port
