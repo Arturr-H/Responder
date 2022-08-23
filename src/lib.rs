@@ -41,11 +41,11 @@ const DATA_BUF_INIT:usize = 1024usize;
 /*- Structs, enums & unions -*/
 #[derive(Clone, Copy)]
 pub struct ServerConfig {
-    addr:       &'static str,
-    port:       u16,
-    serve:      Option<&'static str>,
-    not_found:  Option<&'static str>,
-    routes:     Route<'static>
+    pub addr:       &'static str,
+    pub port:       u16,
+    pub serve:      Option<&'static str>,
+    pub not_found:  Option<&'static str>,
+    pub routes:     Route<'static>
 }
 
 /*- Send diffrent type of function -*/
