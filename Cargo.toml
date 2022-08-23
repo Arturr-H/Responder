@@ -1,5 +1,5 @@
 [package]
-name = "rust-web-framework"
+name = "rust_web_framework"
 version = "0.1.0"
 edition = "2021"
 description = "Quickly crate API:s using this simple and lightweight framework."

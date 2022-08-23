@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-web-framework"
+name = "rust_web_framework"
 version = "0.1.0"
 dependencies = [
  "ansi_term",
