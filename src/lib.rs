@@ -1,3 +1,6 @@
+//! Quickly set up a backend web framework using rust.
+//! Very fast and easy to use.
+
 /*- Global allowings -*/
 #![allow(
     unused_imports,
@@ -39,6 +42,9 @@ use std::{
 const DATA_BUF_INIT:usize = 1024usize;
 
 /*- Structs, enums & unions -*/
+/// The ServerConfig struct contains changeable fields
+/// which configures the server during both startup and
+/// whilst it's running.
 #[derive(Clone, Copy)]
 pub struct ServerConfig {
     pub addr:       &'static str,
@@ -50,6 +56,28 @@ pub struct ServerConfig {
 
 /*- Send diffrent type of function -*/
 #[derive(Clone, Copy)]
+/// Rust does not provide a way of doing function overloads, which
+/// would be helpful in some cases. However this enum is like a way
+/// of solving that issue. When creating an API function which will
+/// be executed at some endpoint, the function will automatically
+/// contain three parameters: stream, headers, and body. However most
+/// of the time, you won't need to use ex the body (in ex. GET requests).
+/// So, this enum will let you choose which params you want your function
+/// to use, however all functions need to have a stream as a parameter
+/// because otherwise the server will not be able to respond correctly.
+///
+/// ## Example
+/// ```
+/// /* some_function only takes stream as param */
+/// Route::Tail(Method::GET, "enpoint1", Function::S(some_function)),
+/// 
+/// /* some_function only takes stream, headers and body as its parameters */
+/// Route::Tail(Method::GET, "enpoint2", Function::SHB(some_function)),
+/// ```
+/// 
+/// S stands for stream
+/// H stands for headers
+/// B stands for body
 pub enum Function {
     /// Function that takes only TcpStream as input,
     S(fn( &mut TcpStream )),
@@ -76,6 +104,25 @@ pub enum Function {
 }
 
 #[derive(Clone, Copy)]
+/// A quick way of nesting routes inside of eachother
+/// stacks can contain either yet another stack, or a 
+/// tail, which will act as an API-endpoint. This enum
+/// is used for the server config when initializing the
+/// server.
+/// 
+/// ## Examples
+/// ```
+/// /*- Initiaize routes -*/
+/// let routes = Route::Stack("", &[
+///     Route::Stack("nest1", &[
+///         Route::Tail(Method::POST, "value", Function::S(|_| {})),
+///         Route::Stack("nest2", &[
+///             Route::Tail(Method::GET, "value1", Function::S(|_| {})),
+///             Route::Tail(Method::GET, "value2", Function::S(|_| {})),
+///         ]),
+///     ]),
+/// ]);
+/// ```
 pub enum Route<'lf> {
     Stack(
         &'lf str,
@@ -89,6 +136,20 @@ pub enum Route<'lf> {
 }
 
 /*- Starting server might fail so return Err(()) if so -*/
+/// Start the server using this function. It takes a 'ServerConfig'
+/// struct as input and returns a result, because setting up the
+/// server might fail.
+/// 
+/// ## Example:
+/// ```
+/// start(ServerConfig {
+///     addr: "127.0.0.1",
+///     port: 8080u16,
+///     serve: Some("./static"),
+///     not_found: Some("./static/404.html"),
+///     routes,
+/// }).unwrap();
+/// ```
 pub fn start(__sconfig:ServerConfig) -> Result<(), Error> {
     let bind_to = &format!(
         "{}:{}",

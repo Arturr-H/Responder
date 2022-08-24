@@ -37,13 +37,15 @@ const STATUS_CODES:&'static [(&'static u16, &'static str); 58] = &[
 
 /*- Structs, enums & unions -*/
 #[derive(Clone, Debug)]
+/// The respond function takes an optional Respond struct
+/// as input, which will contain a content type and content
 pub struct Respond {
     pub response_type:ResponseType,
     pub content:String
 }
 
-/// Decides what the server will respond with
 #[derive(Clone, Copy, Debug)]
+/// Decides what the server will respond with
 pub enum ResponseType {
     Text,
     Json,
@@ -62,6 +64,26 @@ pub enum ImageType {
 }
 
 /*- Functions -*/
+/// Repond quickly using this function
+/// ## Example
+/// ```
+/// /* Repond with 200 OK */
+/// respond(&mut stream, 200u16, None);
+/// 
+/// /* Repond with text */
+/// respond(&mut stream, 200u16, Some(Respond {
+///     content: String::from("Hello world!"),
+///     response_type: ResponseType::Text,
+/// }));
+/// 
+/// /* Repond with JSON */
+/// respond(&mut stream, 200u16, Some(Respond {
+///     /* Better to use a library like serde
+///        to convert structs to JSON strings */
+///     content: String::from("{\"key\":\"value\"}"),
+///     response_type: ResponseType::Text,
+/// }));
+/// ```
 pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> () {
 
     /*- Get the status string -*/
@@ -123,6 +145,14 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> ()
 }
 
 /*- Send 404 page -*/
+/// Quickly repond with a 404 page, will firstly check
+/// if config.not_found exists, and grab 404 page path
+/// from there, else it will just send 404 as a status code
+/// 
+/// ## Example
+/// ```
+/// not_found(&mut stream, config);
+/// ```
 pub fn not_found(mut stream:&TcpStream, config:ServerConfig) -> () {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
@@ -133,6 +163,13 @@ pub fn not_found(mut stream:&TcpStream, config:ServerConfig) -> () {
 }
 
 /*- Respond with file -*/
+/// Will return a Respond struct containing information
+/// to send a file, like an image, text, or json file
+/// 
+/// ## Example
+/// ```
+/// respond(&mut stream, 200u16, file("/path/to/file.png"))
+/// ```
 pub fn file(path:&str) -> Option<Respond> {
 
     /*- Grab the path -*/
