@@ -17,8 +17,8 @@ fn main() {
 
     /*- Initiaize server -*/
     start(ServerConfig {
-        addr: "127.0.0.1", // This will be localhost
-        port: 8080u16,     // Port, use 0.0.0.0 if using docker
+        addr: "127.0.0.1", // This will be localhost, use 0.0.0.0 if using docker
+        port: 8080u16,     // Self explanatory
         serve: Some("./static"),              // Serve static files from a folder
         not_found: Some("./static/404.html"), // Where to direct users going to a path which doesn't exist
         routes,

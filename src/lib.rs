@@ -12,16 +12,18 @@
 /*- Module imports -*/
 pub mod utils;
 pub mod request_info;
-pub mod respond;
+pub mod response;
+pub mod request;
 
 /*- Imports -*/
 pub use request_info::{ RequestInfo, Method };
 use terminal_link::Link;
-use respond::{
+use response::{
     respond,
     Respond,
     ResponseType,
     not_found,
+    with_file
 };
 use ansi_term;
 use std::{

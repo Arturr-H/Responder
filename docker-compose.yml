@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  rust_web_framework:
+    build:
+      context: .
+      dockerfile: main.Dockerfile
+
+    container_name: "rust_web_framework"
+
+    ports:
+      - "8081:8081"
