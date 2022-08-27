@@ -1,6 +1,6 @@
 [package]
 name = "rust_web_framework"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 description = "Quickly crate API:s using this simple and lightweight framework."
 license = "MIT"
