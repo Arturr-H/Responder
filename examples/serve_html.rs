@@ -2,7 +2,7 @@
 
 /*- Imports -*/
 use std::net::TcpStream;
-use rust_web_framework::{*, response::with_file, response::respond};
+use responder::{*, response::with_file, response::respond};
 
 /*- Initialize -*/
 fn main() {

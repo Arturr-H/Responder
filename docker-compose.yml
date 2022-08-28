@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  rust_web_framework:
+  responder:
     build:
       context: .
       dockerfile: main.Dockerfile
 
-    container_name: "rust_web_framework"
+    container_name: "responder"
 
     ports:
       - "8081:8081"

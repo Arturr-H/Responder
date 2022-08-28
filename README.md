@@ -1,8 +1,8 @@
-## Rust web framework
+## Responder
 
 Easy to use, easy to set up.
 ```rust
-use rust_web_framework::*;
+use responder::*;
 
 /*- Initialize -*/
 fn main() {

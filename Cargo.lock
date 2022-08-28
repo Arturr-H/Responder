@@ -71,7 +71,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_web_framework"
+name = "responder"
 version = "0.1.61"
 dependencies = [
  "ansi_term",
