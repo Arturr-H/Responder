@@ -1,10 +1,19 @@
 [package]
 name = "rust_web_framework"
-version = "0.1.6"
+version = "0.1.61"
 edition = "2021"
 description = "Quickly crate API:s using this simple and lightweight framework."
+
 license = "MIT"
+license-file = "LICENSE"
+readme = "README.md"
+repository = "https://github.com/Arturr-H/rust-web-framework"
+keywords = ["web", "framework"]
+categories = ["web-programming"]
 
 [dependencies]
 terminal-link = "0.1.0"
 ansi_term = "0.12.1"
+
+[dev-dependencies]
+rand = "0.8.5"
