@@ -1,6 +1,6 @@
 [package]
 name = "responder"
-version = "0.1.61"
+version = "0.1.62"
 edition = "2021"
 description = "Quickly crate API:s using this simple and lightweight framework."
 
