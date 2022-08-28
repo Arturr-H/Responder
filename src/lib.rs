@@ -11,12 +11,11 @@
 
 /*- Module imports -*/
 pub mod utils;
-pub mod request_info;
 pub mod response;
 pub mod request;
 
 /*- Imports -*/
-pub use request_info::{ RequestInfo, Method };
+use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
 use response::{
     respond,

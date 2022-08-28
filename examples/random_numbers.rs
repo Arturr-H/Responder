@@ -2,7 +2,7 @@
 
 /*- Imports -*/
 use std::net::TcpStream;
-use responder::{*, response::Respond, response::respond};
+use responder::{*, request::info::Method, response::Respond, response::respond};
 use rand::Rng;
 
 /*- Initialize -*/
