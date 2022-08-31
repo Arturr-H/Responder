@@ -81,7 +81,37 @@ pub mod info {
     /// A struct containing all http-methods
     /// that are supported by the server
     #[derive(Debug, Clone, Copy)]
-    pub enum Method { GET, POST, PUT, DELETE, HEAD, OPTIONS, CONNECT, TRACE, PATCH, UNKNOWN }
+    pub enum Method {
+
+        /// Retrieve data using URI
+        GET,
+
+        /// Send data using body
+        POST,
+        
+        /// Replaces all current representations of the target resource with the uploaded content.
+        PUT,
+        
+        /// Removes all current representations of the target resource given by a URI.
+        DELETE,
+        
+        /// Same as GET, but transfers the status line and header section only.
+        HEAD,
+        
+        /// Describes the communication options for the target resource.
+        OPTIONS,
+        
+        /// Establishes a tunnel to the server identified by a given URI.
+        CONNECT,
+        
+        /// Performs a message loop-back test along the path to the target resource.
+        TRACE,
+        
+        /// A PATCH request is considered a set of instructions on how to modify a resource.
+        PATCH,
+        
+        UNKNOWN
+    }
 
     /*- Method implementations -*/
     impl RequestInfo<'_> {
