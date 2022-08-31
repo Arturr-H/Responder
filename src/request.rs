@@ -24,7 +24,7 @@ use std::{
 /// }
 /// ```
 pub fn require_headers(
-    mut stream:TcpStream,
+    mut stream:&mut TcpStream,
     headers:HashMap<&str, &str>,
     required:&[&str]
 ) -> bool {
@@ -115,15 +115,15 @@ pub mod info {
 
             /*- Parse the method -*/
             let method = match method {
-                "GET" => Method::GET,
-                "POST" => Method::POST,
-                "PUT" => Method::PUT,
+                "GET" =>    Method::GET,
+                "POST" =>   Method::POST,
+                "PUT" =>    Method::PUT,
                 "DELETE" => Method::DELETE,
-                "HEAD" => Method::HEAD,
+                "HEAD" =>   Method::HEAD,
                 "OPTIONS" => Method::OPTIONS,
                 "CONNECT" => Method::CONNECT,
-                "TRACE" => Method::TRACE,
-                "PATCH" => Method::PATCH,
+                "TRACE" =>  Method::TRACE,
+                "PATCH" =>  Method::PATCH,
                 _ => Method::UNKNOWN,
             };
 
