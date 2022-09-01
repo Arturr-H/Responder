@@ -73,8 +73,13 @@ pub mod info {
     /// http-request, like the method, path and version
     #[derive(Clone, Copy)]
     pub struct RequestInfo<'lf> {
+        /// The http-method
         pub method: Method,
+
+        /// The path to the endpoint
         pub path:   &'lf str,
+
+        /// Http verison
         pub version:&'lf str,
     }
 

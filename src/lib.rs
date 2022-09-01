@@ -13,6 +13,7 @@
 pub mod utils;
 pub mod response;
 pub mod request;
+pub mod thread_handler;
 
 /*- Imports -*/
 use request::info::{ RequestInfo, Method };
@@ -50,6 +51,7 @@ const DATA_BUF_INIT:usize = 1024usize;
 pub struct ServerConfig {
     pub addr:       &'static str,
     pub port:       u16,
+    pub num_threads:u16,
     pub serve:      Option<&'static str>,
     pub not_found:  Option<&'static str>,
     pub routes:     Route<'static>
@@ -153,6 +155,7 @@ pub enum Route<'lf> {
 /// start(ServerConfig {
 ///     addr: "127.0.0.1",
 ///     port: 8080u16,
+///     num_threads: 8u16,
 ///     serve: Some("./static"),
 ///     not_found: Some("./static/404.html"),
 ///     routes,
@@ -188,11 +191,14 @@ pub fn start(__sconfig:ServerConfig) -> Result<(), Error> {
         )
     );
 
+    /*- Initialize thread_handler -*/
+    let thread_handler = thread_handler::MainThreadHandler::new(__sconfig.num_threads);
+
     /*- Stream.incoming() is a blocking iterator. Will unblock on requests -*/
     for request in stream.incoming() {
 
         /*- Spawn a new thread -*/
-        spawn(move || {
+        thread_handler.exec(move || {
             /*- Ignore failing requests -*/
             handle_req(match request {
                 Ok(req) => req,
