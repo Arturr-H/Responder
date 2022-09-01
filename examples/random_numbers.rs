@@ -19,6 +19,7 @@ fn main() {
         port: 8080u16,
         serve: None,
         not_found: None,
+        num_threads: 8u16,
         routes,
     }).unwrap();
 }

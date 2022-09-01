@@ -18,6 +18,7 @@ fn main() {
         port: 8080u16,
         serve: Some("./examples/static"),
         not_found: None,
+        num_threads: 8u16,
         routes,
     }).unwrap();
 }
