@@ -21,6 +21,7 @@ fn main() {
         port: 8080u16,     // Self explanatory
         serve: Some("./static"),              // Serve static files from a folder
         not_found: Some("./static/404.html"), // Where to direct users going to a path which doesn't exist
+        num_threads: 8u16,                    // How many threads to handle all requests
         routes,
     }).unwrap();
 
