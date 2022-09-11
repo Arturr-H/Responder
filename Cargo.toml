@@ -2,7 +2,7 @@
 name = "responder"
 version = "0.1.65"
 edition = "2021"
-description = "Quickly crate API:s using this simple and lightweight framework."
+description = "Quickly create API:s using this simple and lightweight framework."
 
 license = "MIT"
 license-file = "LICENSE"

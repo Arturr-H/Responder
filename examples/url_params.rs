@@ -21,7 +21,7 @@ fn main() {
     start(ServerConfig {
         addr: "127.0.0.1",
         port: 8080u16,
-        serve: None,
+        serve: Some("./examples/static"),
         not_found: None,
         num_threads: 8u16,
         routes,

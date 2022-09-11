@@ -1,5 +1,6 @@
 /*- Imports -*/
 use std::{net::TcpStream, io::{Write, Read}, path::Path, fs};
+use std::convert::Into;
 use crate::ServerConfig;
 
 /*- Constants -*/
@@ -41,7 +42,8 @@ const STATUS_CODES:&'static [(&'static u16, &'static str); 58] = &[
 /// as input, which will contain a content type and content
 pub struct Respond {
     pub response_type:ResponseType,
-    pub content:String
+    pub content:      String,
+    pub additional_headers:Option<&'static [&'static str]>
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -112,18 +114,17 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> ()
     };
 
     /*- If content was provided -*/
-    if let Some(res) = respond {
-
+    if let Some(content) = respond {
+        /*- Grab additional headers -*/
+        let additional_headers = content.additional_headers.unwrap_or(&[]).join("\r\n");
+        
         /*- Write the status & content to the stream -*/
         match stream.write(
             format!(
-                "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n\r\n{}",
-                status, res.content.len(), response_type, res.content
+                "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n\r\n{}",
+                status, content.content.len(), response_type, additional_headers, content.content
             ).as_bytes()
-        ) {
-            Ok(_) => (),
-            Err(_) => ()
-        };
+        ) { Ok(_) => (), Err(_) => () };
     }else {
         /*- Write the status to the stream -*/
         match stream.write(
@@ -193,7 +194,8 @@ pub fn with_file(path:&str) -> Option<Respond> {
     match content {
         Some(data) => Some(Respond {
             content: data,
-            response_type: ResponseType::guess(path)
+            response_type: ResponseType::guess(path),
+            additional_headers: None
         }),
         None => None
     }
@@ -240,9 +242,9 @@ impl Respond {
     /// 
     /// ## Examples
     /// respond(&mut stream, 200u16, Respond::text("Hello world!"))
-    pub fn text(text:&str) -> Option<Respond> {
+    pub fn text(with:&str) -> Option<Respond> {
         Some(
-            Respond { response_type: ResponseType::Text, content: text.to_string() }
+            Respond { response_type: ResponseType::Text, content: with.to_string(), additional_headers: None }
         )
     }
 

@@ -300,7 +300,6 @@ fn call_endpoint(
                         tail_found = true;
 
                         /*- Push the path to the actual final path -*/
-                        println!("PUSH {pathname}");
                         full_path.push_str(pathname);
                         full_path.push_str("/");
                         break 'tail_search;
@@ -336,11 +335,8 @@ fn call_endpoint(
                     None => return Err(())
                 };
 
-                println!("current_request_path: {request_path} {index} - {subp}");
-
                 match is_url_param(subp) {
                     (true, param_name) => {
-                        println!("AWDAWDAWD {} {}", param_name.clone(), &request_path);
                         params.insert(param_name.clone(), &request_path);
 
                         /*- Change full_path -*/
@@ -349,25 +345,17 @@ fn call_endpoint(
                     },
                     (false, _) => {
                         if request_path != &subp {
-                            println!("{request_path} != {subp}");
                             return Err(());
                         };
                     },
                 }
             }
 
-            println!("2 Before Exec");
-            println!("Cmp {full_path} {}", info.path);
-                
             /*- If it's the requested path -*/
             if final_check_url == info.path {
 
-                println!("Before Exec");
-
                 /*- If it's the requested method -*/
                 if method == &info.method {
-
-                    println!("Exec");
 
                     /*- Call the associated function -*/
                     Function::call_fn(*function_ptr, stream, headers, &params, body);
@@ -383,119 +371,6 @@ fn call_endpoint(
         },
     };
 }
-
-
-
-
-// fn call_endpoint<'lf> (
-//     route:&'lf Route,
-//     info:RequestInfo<'lf>,
-//     final_path:&'lf mut String,
-
-//     // Function params
-//     (
-//         headers,
-//         mut params,
-//         stream,
-//         body
-//     ):(
-//         &HashMap<&str, &str>,
-//         &mut HashMap<&'lf str, &'lf str>,
-//         &mut TcpStream,
-//         &String
-//     )
-// ) -> Result<(), ()> {
-
-//     /*- Check what type of route it is -*/
-//     match route {
-//         Route::Stack(pathname, routes) => {
-
-//             /*- If a tail was found -*/
-//             let mut tail_found:bool = false;
-//             let final_compare = &final_path.clone();
-//             let mut end_final:String = final_compare.clone();
-
-//             /*- Iterate over all stacks and tails -*/
-//             'tail_search: for route in routes.iter() {
-
-//                 /*- Push the path -*/
-//                 let mut new_end = Vec::from([pathname, "/"]).concat().clone();
-//                 // end_final.push_str(pathname);
-//                 // end_final.push_str("/");
-
-//                 /*- Recurse -*/
-//                 match call_endpoint(route, info, &mut new_end, (headers, params, stream, body)) {
-//                     Ok(_) => {
-//                         tail_found = true;
-
-//                         /*- Push the path to the actual final path -*/
-//                         final_path.push_str(pathname);
-//                         final_path.push_str("/");
-//                         break 'tail_search;
-//                     },
-//                     Err(_) => {
-//                         end_final = final_compare.to_string();
-//                         continue;
-//                     }
-//                 };
-//             };
-
-//             /*- Return -*/
-//             if tail_found { return Ok(()); }
-//             else { return Err(()); }
-//         },
-//         Route::Tail(method, pathname, function) => {
-
-//             /*- Check for url parameters -*/
-//             let final_subpaths:Vec<&str> = final_path.split("/").collect::<Vec<&str>>().clone();
-//             println!("fin:{:?}", final_subpaths);
-//             println!("fan:{:?}", get_subpaths(info.path));
-//             for (index, req_path) in get_subpaths(info.path).iter().enumerate() {
-
-//                 /*- Get the current searched subpath to check wether they are the same -*/
-//                 let subp:&str = match final_subpaths.get(index) {
-//                     Some(e) => e,
-//                     None => {println!("2");return Err(())}
-//                 };
-
-//                 match is_url_param(req_path) {
-//                     (true, param_name) => {
-//                         params.insert(param_name.clone(), subp.clone());
-//                         continue;
-//                     },
-//                     (false, _) => {
-//                         if req_path != &subp {
-//                             println!("{req_path} != {subp}");
-//                             return Err(());
-//                         };
-//                     },
-//                 }
-//             }
-
-//             println!("{:?}", params);
-//             // println!("PATH: {:?}", get_subpaths(info.path));
-//             // println!("FINAL: {:?}", get_subpaths(&final_path));
-            
-//             /*- If it's the requested path -*/
-//             if [final_path.clone().to_string(), pathname.to_string()].concat() == info.path {
-
-//                 /*- If it's the requested method -*/
-//                 if method == &info.method {
-
-//                     /*- Call the associated function -*/
-//                     Function::call_fn(*function, stream, headers, params, body);
-
-//                     /*- Return success -*/
-//                     return Ok(());
-//                 }else {
-//                     return Err(());    
-//                 }
-//             }else {
-//                 return Err(());
-//             }
-//         }
-//     };
-// }
 
 /*- Get subpaths of a full path. Example: get_subpaths("/Path/to/value") -> vec!["Path", "to", "value"] -*/
 fn get_subpaths(path:&str) -> Vec<&str> {
@@ -536,25 +411,32 @@ fn serve_static_dir(dir:&str, request_path:&str, mut stream:&TcpStream) -> Resul
     match fs::File::open(file_path) {
         Ok(mut e) => {
             /*- Get file content -*/
-            let mut content:String = String::new();
-            match e.read_to_string(&mut content) {
-                Ok(_) => (),
-                Err(_) => (),
-            };
+            // TODO
+            // let mut file_content = match image::open(file_path) {
+            //     Ok(e) => e.into_bytes(),
+            //     Err(_) => {
+            //         let mut file_content = String::new();
+            //         match e.read_to_string(&mut file_content) {
+            //             Ok(_) => file_content.into_bytes(),
+            //             Err(_) => return Err(())
+            //         }
+            //     }
+            // };
+            // let res:Respond = Respond {
+            //     response_type: ResponseType::guess(file_path),
+            //     content: response::ContentType::Bytes(file_content),
+            //     additional_headers: None
+            // };
 
             /*- Respond -*/
             respond(
                 &mut stream,
                 200u16,
-                Some(Respond {
-                    response_type: ResponseType::guess(file_path),
-                    content
-                })
-            )
+                None
+            );
         },
         Err(_) => return Err(())
     }
-
     Ok(())
 }
 
