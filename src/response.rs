@@ -1,10 +1,9 @@
 /*- Imports -*/
 use std::{net::TcpStream, io::{Write, Read}, path::Path, fs};
-use std::convert::Into;
 use crate::ServerConfig;
 
 /*- Constants -*/
-const STATUS_CODES:&'static [(&'static u16, &'static str); 58] = &[
+const STATUS_CODES:&[(&u16, &str); 58] = &[
     (&400, "Bad Request"),                      (&500, "Internal Server Error"),
     (&401, "Unauthorized"),                     (&501, "Not Implemented"),
     (&402, "Payment Required"),                 (&502, "Bad Gateway"),
@@ -86,7 +85,7 @@ pub enum ImageType {
 ///     response_type: ResponseType::Text,
 /// }));
 /// ```
-pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> () {
+pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) {
 
     /*- Get the status string -*/
     let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&0u16, "Internal error - Missing status code")).1;
@@ -119,30 +118,24 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> ()
         let additional_headers = content.additional_headers.unwrap_or(&[]).join("\r\n");
         
         /*- Write the status & content to the stream -*/
-        match stream.write(
+        if stream.write(
             format!(
                 "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n\r\n{}",
                 status, content.content.len(), response_type, additional_headers, content.content
             ).as_bytes()
-        ) { Ok(_) => (), Err(_) => () };
+        ).is_ok() { };
     }else {
         /*- Write the status to the stream -*/
-        match stream.write(
+        if stream.write(
             format!(
                 "HTTP/1.1 {}\r\n\r\n{} {}",
                 status, status, status_msg
             ).as_bytes()
-        ) {
-            Ok(_) => (),
-            Err(_) => ()
-        };
+        ).is_ok() { };
     };
 
     /*- Flush the stream -*/
-    match stream.flush() {
-        Ok(_) => (),
-        Err(_) => ()
-    };
+    stream.flush().ok();
 }
 
 /*- Send 404 page -*/
@@ -154,12 +147,12 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) -> ()
 /// ```
 /// not_found(&mut stream, config);
 /// ```
-pub fn not_found(mut stream:&TcpStream, config:ServerConfig) -> () {
+pub fn not_found(stream:&TcpStream, config:ServerConfig) {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
-        respond(&mut stream, 404u16, with_file(page));
+        respond(stream, 404u16, with_file(page));
     }else {
-        respond(&mut stream, 404u16, None);
+        respond(stream, 404u16, None);
     }
 }
 
@@ -180,10 +173,7 @@ pub fn with_file(path:&str) -> Option<Respond> {
     let content:Option<String> = match fs::File::open(path) {
         Ok(mut e) => {
             let mut content:String = String::new();
-            match e.read_to_string(&mut content) {
-                Ok(_) => (),
-                Err(_) => (),
-            };
+            if e.read_to_string(&mut content).is_ok() { }
 
             Some(content)
         },
@@ -191,14 +181,11 @@ pub fn with_file(path:&str) -> Option<Respond> {
     };
 
     /*- Return -*/
-    match content {
-        Some(data) => Some(Respond {
-            content: data,
-            response_type: ResponseType::guess(path),
-            additional_headers: None
-        }),
-        None => None
-    }
+    content.map(|data| Respond {
+        content: data,
+        response_type: ResponseType::guess(path),
+        additional_headers: None
+    })
 }
 
 /*- Method implementations -*/
@@ -212,29 +199,29 @@ impl ResponseType {
             Some(ext) => {
                 match ext.to_str() {
                     /*- Html -*/
-                    Some("html") => return ResponseType::Html,
-                    Some("htm")  => return ResponseType::Html,
+                    Some("html") => ResponseType::Html,
+                    Some("htm")  => ResponseType::Html,
     
                     /*- Json -*/
-                    Some("json") => return ResponseType::Json,
-                    Some("yml")  => return ResponseType::Json,
-                    Some("yaml") => return ResponseType::Json,
+                    Some("json") => ResponseType::Json,
+                    Some("yml")  => ResponseType::Json,
+                    Some("yaml") => ResponseType::Json,
 
                     /*- Image -*/
-                    Some("png")  => return ResponseType::Image(ImageType::Png),
-                    Some("jpg")  => return ResponseType::Image(ImageType::Jpeg),
-                    Some("jpeg") => return ResponseType::Image(ImageType::Jpeg),
-                    Some("gif")  => return ResponseType::Image(ImageType::Gif),
-                    Some("webp") => return ResponseType::Image(ImageType::Webp),
-                    Some("svg")  => return ResponseType::Image(ImageType::Svg),
+                    Some("png")  => ResponseType::Image(ImageType::Png),
+                    Some("jpg")  => ResponseType::Image(ImageType::Jpeg),
+                    Some("jpeg") => ResponseType::Image(ImageType::Jpeg),
+                    Some("gif")  => ResponseType::Image(ImageType::Gif),
+                    Some("webp") => ResponseType::Image(ImageType::Webp),
+                    Some("svg")  => ResponseType::Image(ImageType::Svg),
      
                     /*- Text -*/
-                    Some(_)   => return ResponseType::Text,
-                    None      => return ResponseType::Text,
-                };
+                    Some(_)   => ResponseType::Text,
+                    None      => ResponseType::Text,
+                }
             },
-            None => return ResponseType::Text,
-        };
+            None => ResponseType::Text,
+        }
     }
 }
 impl Respond {

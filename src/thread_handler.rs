@@ -13,12 +13,14 @@ use std::{
 };
 
 /*- Structs, enums & unions -*/
+#[allow(dead_code)]
 pub struct MainThreadHandler {
     threads: Vec<Worker>,
     sender: mpsc::Sender<Task>
 }
 
 /*- Handles a connection -*/
+#[allow(dead_code)]
 pub struct Worker {
     thread: JoinHandle<()>,
 }

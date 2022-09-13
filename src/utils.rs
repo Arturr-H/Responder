@@ -1,5 +1,3 @@
-/*- Imports -*/
-use std::io::Write;
 
 /*- Modules -*/
 pub mod headers {
@@ -8,7 +6,7 @@ pub mod headers {
     use std::collections::HashMap;
 
     /*- Parse a data buffer into an hashmap containing headers -*/
-    pub fn parse_headers<'lf>(request:&'lf str) -> HashMap<&'lf str, &'lf str> {
+    pub fn parse_headers(request:&str) -> HashMap<&str, &str> {
 
         /*- Create the hashmap -*/
         let mut end:HashMap<&str, &str> = HashMap::new();
@@ -30,6 +28,6 @@ pub mod headers {
         };
 
         /*- Return */
-        return end;
+        end
     }
 }

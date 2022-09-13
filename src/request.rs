@@ -24,12 +24,12 @@ use std::{
 /// }
 /// ```
 pub fn require_headers(
-    mut stream:&mut TcpStream,
+    stream:&mut TcpStream,
     headers:HashMap<&str, &str>,
     required:&[&str]
 ) -> bool {
     /*- Get all headers -*/
-    let keys:Vec<&&str> = headers.keys().collect();
+    let mut keys = headers.keys();
 
     /*- Create vec with capacity so that we won't
         need to allocate everytime we update the vec -*/
@@ -38,15 +38,15 @@ pub fn require_headers(
     /*- Iterate over all headers -*/
     for key in required {
         /*- Check if headers do not contain the current required header -*/
-        if !keys.contains(&key) {
-            missing_headers.push(&key);
+        if !keys.any(|x| x == key) {
+            missing_headers.push(key);
         };
     };
 
     /*- Check if anything was missing -*/
     if !missing_headers.is_empty() {
         respond(
-            &mut stream,
+            stream,
             400u16,
             Respond::text(
                 &format!(
@@ -128,7 +128,7 @@ pub mod info {
         /// ```
         /// let info:RequestInfo = RequestInfo::parse_req(&request);
         /// ```
-        pub fn parse_req(request:&str) -> Result<RequestInfo, ()> {
+        pub fn parse_req(request:&str) -> Result<RequestInfo, u8> {
             /*- Get the lines -*/
             let mut lines = request.split::<&str>("\r\n");
 
@@ -136,14 +136,14 @@ pub mod info {
             let line = match Iterator::nth(&mut lines, 0) {
                 Some(e) => e,
                 None => {
-                    return Err(())
+                    return Err(0)
                 }
             };
 
             /*- First lines look something like this: "GET / HTTP/1.1\r\n" -*/
             let info_str = line.split_whitespace().collect::<Vec<&str>>();
             let (method, path, version):(&str, &str, &str) = (
-                info_str.get(0).unwrap_or(&""),
+                info_str.first().unwrap_or(&""),
                 info_str.get(1).unwrap_or(&""),
                 info_str.get(2).unwrap_or(&""),
             );
@@ -169,18 +169,17 @@ pub mod info {
 
     impl std::cmp::PartialEq for Method {
         fn eq(&self, other: &Self) -> bool {
-            match (self, other) {
-                (Method::GET, Method::GET) => true,
-                (Method::POST, Method::POST) => true,
-                (Method::PUT, Method::PUT) => true,
-                (Method::DELETE, Method::DELETE) => true,
-                (Method::HEAD, Method::HEAD) => true,
-                (Method::OPTIONS, Method::OPTIONS) => true,
-                (Method::CONNECT, Method::CONNECT) => true,
-                (Method::TRACE, Method::TRACE) => true,
-                (Method::PATCH, Method::PATCH) => true,
-                _ => false,
-            }
+            matches!(
+                  (self, other),
+                  (Method::GET, Method::GET)
+                | (Method::POST, Method::POST)
+                | (Method::PUT, Method::PUT)
+                | (Method::DELETE, Method::DELETE)
+                | (Method::HEAD, Method::HEAD)
+                | (Method::OPTIONS, Method::OPTIONS)
+                | (Method::CONNECT, Method::CONNECT)
+                | (Method::TRACE, Method::TRACE)
+                | (Method::PATCH, Method::PATCH))
         }
     }
 
