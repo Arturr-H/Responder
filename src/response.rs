@@ -116,11 +116,11 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) {
     if let Some(content) = respond {
         /*- Grab additional headers -*/
         let additional_headers = content.additional_headers.unwrap_or(&[]).join("\r\n");
-        
+
         /*- Write the status & content to the stream -*/
         if stream.write(
             format!(
-                "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n\r\n{}",
+                "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}{}\r\n\r\n{}",
                 status, content.content.len(), response_type, additional_headers, content.content
             ).as_bytes()
         ).is_ok() { };

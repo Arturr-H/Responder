@@ -213,7 +213,7 @@ fn handle_req(mut stream:TcpStream, config:&ServerConfig) {
     let buffer:&mut [u8] = &mut [0u8; DATA_BUF_INIT];
 
     /*- Read data into buffer -*/
-    match stream.read_exact(buffer) {
+    match stream.read(buffer) {
         Ok(data) => data,
         Err(_) => return
     };
