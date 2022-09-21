@@ -29,7 +29,7 @@ pub fn require_headers(
     required:&[&str]
 ) -> bool {
     /*- Get all headers -*/
-    let mut keys = headers.keys();
+    let keys = headers.keys();
 
     /*- Create vec with capacity so that we won't
         need to allocate everytime we update the vec -*/
@@ -38,7 +38,8 @@ pub fn require_headers(
     /*- Iterate over all headers -*/
     for key in required {
         /*- Check if headers do not contain the current required header -*/
-        if !keys.any(|x| x == key) {
+        if !keys.clone().any(|e| e == key) {
+            /*- Add the missing header to the vec -*/
             missing_headers.push(key);
         };
     };
