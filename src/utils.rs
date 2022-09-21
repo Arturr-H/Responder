@@ -21,7 +21,7 @@ pub mod headers {
             };
 
             /*- Add k and v to hashmap -*/
-            match end.insert(k, v) {
+            match end.insert(k, v.trim_start()) {
                 Some(e) => e,
                 None => continue
             };

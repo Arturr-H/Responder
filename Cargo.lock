@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "responder"
-version = "0.1.67"
+version = "0.1.68"
 dependencies = [
  "ansi_term",
  "rand",
