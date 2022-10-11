@@ -2,12 +2,12 @@
 //! Very fast and easy to use.
 
 /*- Global allowings -*/
-// #![allow(
-//     unused_imports,
-//     unused_mut,
-//     dead_code,
-//     unused_variables
-// )]
+#![allow(
+    unused_imports,
+    unused_mut,
+    dead_code,
+    unused_variables
+)]
 
 /*- Module imports -*/
 pub mod utils;
@@ -38,6 +38,7 @@ use std::{
 
 /*- Constants -*/
 const DATA_BUF_INIT:usize = 1024usize;
+const DATA_BUF_POST_INIT:usize = 65536usize;
 
 /*- Structs, enums & unions -*/
 /// The ServerConfig struct contains changeable fields
@@ -45,12 +46,12 @@ const DATA_BUF_INIT:usize = 1024usize;
 /// whilst it's running.
 #[derive(Clone, Copy)]
 pub struct ServerConfig {
-    pub addr:       &'static str,
-    pub port:       u16,
-    pub num_threads:u16,
-    pub serve:      Option<&'static str>,
-    pub not_found:  Option<&'static str>,
-    pub routes:     Route<'static>
+    addr:       &'static str,
+    port:       u16,
+    num_threads:u16,
+    serve:      Option<&'static str>,
+    not_found:  Option<&'static str>,
+    routes:     Route
 }
 
 /*- Send diffrent type of function -*/
@@ -129,108 +130,54 @@ pub enum Function {
 ///     ]),
 /// ]);
 /// ```
-pub enum Route<'lf> {
+pub enum Route {
     Stack(
-        &'lf str,
-        &'lf [Route<'lf>]
+        &'static str,
+        &'static [Route]
     ),
     Tail(
         Method,
-        &'lf str,
+        &'static str,
         Function
     )
-}
-
-/*- Starting server might fail so return Err(()) if so -*/
-/// Start the server using this function. It takes a 'ServerConfig'
-/// struct as input and returns a result, because setting up the
-/// server might fail.
-/// 
-/// ## Example:
-/// ```
-/// start(ServerConfig {
-///     addr: "127.0.0.1",
-///     port: 8080u16,
-///     num_threads: 8u16,
-///     serve: Some("./static"),
-///     not_found: Some("./static/404.html"),
-///     routes,
-/// }).unwrap();
-/// ```
-pub fn start(__sconfig:ServerConfig) -> Result<(), Error> {
-    let bind_to = &format!(
-        "{}:{}",
-        __sconfig.addr, __sconfig.port
-    );
-
-    /*- Start the listener -*/
-    let stream = match TcpListener::bind(bind_to) {
-        Ok(listener) => listener,
-
-        /*- If failed to open server on port -*/
-        Err(e) => return Err(e)
-    };
-
-    /*- Log status -*/
-    println!("{}", 
-        &format!(
-            "{} {}",
-            ansi_term::Color::RGB(123, 149, 250).paint(
-                "Server opened on"
-            ),
-            ansi_term::Color::RGB(255, 255, 0).underline().paint(
-                format!("{}", Link::new(
-                    &format!("http://{}", &bind_to),
-                    bind_to,
-                ))
-            )    
-        )
-    );
-
-    /*- Initialize thread_handler -*/
-    let thread_handler = thread_handler::MainThreadHandler::new(__sconfig.num_threads);
-
-    /*- Stream.incoming() is a blocking iterator. Will unblock on requests -*/
-    for request in stream.incoming() {
-
-        /*- Spawn a new thread -*/
-        thread_handler.exec(move || {
-            /*- Ignore failing requests -*/
-            handle_req(match request {
-                Ok(req) => req,
-                Err(_) => return,
-            }, &__sconfig);
-        });
-    };
-
-    /*- Return, even though it will never happen -*/
-    Ok(())
 }
 
 /*- Functions -*/
 fn handle_req(mut stream:TcpStream, config:&ServerConfig) {
     /*- Data buffer -*/
-    let buffer:&mut [u8] = &mut [0u8; DATA_BUF_INIT];
+    let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
 
     /*- Read data into buffer -*/
-    match stream.read(buffer) {
+    match stream.read_to_end(buffer) {
         Ok(data) => data,
         Err(_) => return
     };
 
     /*- Parse headers (via utils) -*/
-    let request:String = String::from_utf8_lossy(buffer).to_string();
+    let mut request:String = String::from_utf8_lossy(buffer).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
 
     /*- Get request info -*/
+    let mut body:String = String::new();
     let info:RequestInfo = match RequestInfo::parse_req(&request) {
         Ok(e) => e,
         Err(_) => return
     };
 
-    /*- If getting body is neccesary or not -*/
-    let mut body:String = String::new();
+    /*- POST requests often contain huge bodies in terms of bytes, (ex when sending images). The
+        DATA_BUF_INIT constant is regularly set to a relativly small number like 2048 which images
+        won't fit into, therefore we'll update the buffer array to contain more bytes for POST requests -*/
     if info.method == Method::POST {
+        // let buffer:&mut [u8] = &mut [0u8; DATA_BUF_POST_INIT];
+
+        // /*- Read data into buffer again -*/
+        // match stream.read(buffer) {
+        //     Ok(data) => {println!("aw");data},
+        //     Err(_) => {println!("aw2");return}
+        // };
+
+        // let request:String = String::from_utf8_lossy(buffer).to_string();
+        // println!("{DATA_BUF_POST_INIT}");
         body = request.split("\r\n\r\n").last().unwrap().to_string();
     }
     let mut full_path:String = String::new();
@@ -454,4 +401,94 @@ impl Function {
             Self::SHB(e) => e(stream, headers, body),
         }
     }
+}
+
+/*- Builder pattern for server config struct -*/
+impl<'f> ServerConfig {
+    pub fn new() -> ServerConfig {
+        ServerConfig {
+            addr: "",
+            port: 0,
+            num_threads: 1,
+            serve: None,
+            not_found: None,
+            routes: Route::Stack("", &[])
+        }
+    }
+    pub fn address(&mut self, addr:&'static str) -> &mut Self { self.addr = addr; self }
+    pub fn port(&mut self, port:u16) -> &mut Self             {  self.port = port; self }
+    pub fn threads(&mut self, num_threads:u16) -> &mut Self   { self.num_threads = num_threads; self }
+    pub fn serve(&mut self, serve:&'static str) -> &mut Self  { self.serve = Some(serve); self }
+    pub fn routes(&mut self, routes:Route) -> &mut Self {
+        self.routes = routes;
+        self
+    }
+    pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
+    /*- Starting server might fail so return Err(()) if so -*/
+    /// Start the server using this function. It takes a 'ServerConfig'
+    /// struct as input and returns a result, because setting up the
+    /// server might fail.
+    /// 
+    /// ## Example:
+    /// ```
+    /// ServerConfig::new()
+    ///     .routes(routes)
+    ///     .address("127.0.0.1")
+    ///     .port(8080)
+    ///     .threads(8)
+    ///     .serve("./static")
+    ///     .not_found("./static/404.html")
+    ///     .start()
+    ///     .unwrap();
+    /// ```
+    pub fn start(self) -> Result<(), Error> {
+        let bind_to = &format!(
+            "{}:{}",
+            self.addr, self.port
+        );
+
+        /*- Start the listener -*/
+        let stream = match TcpListener::bind(bind_to) {
+            Ok(listener) => listener,
+
+            /*- If failed to open server on port -*/
+            Err(e) => return Err(e)
+        };
+
+        /*- Log status -*/
+        println!("{}", 
+            &format!(
+                "{} {}",
+                ansi_term::Color::RGB(123, 149, 250).paint(
+                    "Server opened on"
+                ),
+                ansi_term::Color::RGB(255, 255, 0).underline().paint(
+                    format!("{}", Link::new(
+                        &format!("http://{}", &bind_to),
+                        bind_to,
+                    ))
+                )    
+            )
+        );
+
+        /*- Initialize thread_handler -*/
+        let thread_handler = thread_handler::MainThreadHandler::new(self.num_threads);
+
+        /*- Stream.incoming() is a blocking iterator. Will unblock on requests -*/
+        for request in stream.incoming() {
+            
+            /*- Spawn a new thread -*/
+            thread_handler.exec(move || {
+                /*- Ignore failing requests -*/
+                handle_req(match request {
+                    Ok(req) => req,
+                    Err(_) => return,
+                }, &self);
+            });
+        };
+
+        /*- Return, even though it will never happen -*/
+        Ok(())
+    }
+
 }

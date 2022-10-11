@@ -13,14 +13,13 @@ fn main() {
     ]);
 
     /*- Initiaize server -*/
-    start(ServerConfig {
-        addr: "127.0.0.1",
-        port: 8080u16,
-        serve: Some("./examples/static"),
-        not_found: None,
-        num_threads: 8u16,
-        routes,
-    }).unwrap();
+    ServerConfig::new()
+        .routes(routes)
+        .address("127.0.0.1")
+        .serve("./examples/static")
+        .port(8080)
+        .start()
+        .unwrap();
 }
 
 /*- Api endpoints -*/
