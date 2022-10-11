@@ -148,7 +148,7 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
     let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
 
     /*- Read data into buffer -*/
-    match stream.read_to_end(buffer) {
+    match stream.read(buffer) {
         Ok(data) => data,
         Err(_) => return
     };
@@ -163,6 +163,7 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
         Ok(e) => e,
         Err(_) => return
     };
+    dbg!(1);
 
     /*- POST requests often contain huge bodies in terms of bytes, (ex when sending images). The
         DATA_BUF_INIT constant is regularly set to a relativly small number like 2048 which images
