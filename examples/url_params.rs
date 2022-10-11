@@ -18,7 +18,7 @@ fn main() {
     ]);
 
     /*- Initiaize server -*/
-    ServerConfig::new()
+    Server::new()
         .routes(routes)
         .address("127.0.0.1")
         .port(8080)

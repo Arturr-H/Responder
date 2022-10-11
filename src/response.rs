@@ -1,6 +1,6 @@
 /*- Imports -*/
 use std::{net::TcpStream, io::{Write, Read}, path::Path, fs};
-use crate::ServerConfig;
+use crate::Server;
 
 /*- Constants -*/
 const STATUS_CODES:&[(&u16, &str); 58] = &[
@@ -147,7 +147,7 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) {
 /// ```
 /// not_found(&mut stream, config);
 /// ```
-pub fn not_found(stream:&TcpStream, config:ServerConfig) {
+pub fn not_found(stream:&TcpStream, config:Server) {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
         respond(stream, 404u16, with_file(page));

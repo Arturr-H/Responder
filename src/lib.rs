@@ -41,11 +41,11 @@ const DATA_BUF_INIT:usize = 1024usize;
 const DATA_BUF_POST_INIT:usize = 65536usize;
 
 /*- Structs, enums & unions -*/
-/// The ServerConfig struct contains changeable fields
+/// The Server struct contains changeable fields
 /// which configures the server during both startup and
 /// whilst it's running.
 #[derive(Clone, Copy)]
-pub struct ServerConfig {
+pub struct Server {
     addr:       &'static str,
     port:       u16,
     num_threads:u16,
@@ -143,7 +143,7 @@ pub enum Route {
 }
 
 /*- Functions -*/
-fn handle_req(mut stream:TcpStream, config:&ServerConfig) {
+fn handle_req(mut stream:TcpStream, config:&Server) {
     /*- Data buffer -*/
     let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
 
@@ -404,9 +404,9 @@ impl Function {
 }
 
 /*- Builder pattern for server config struct -*/
-impl<'f> ServerConfig {
-    pub fn new() -> ServerConfig {
-        ServerConfig {
+impl<'f> Server {
+    pub fn new() -> Server {
+        Server {
             addr: "",
             port: 0,
             num_threads: 1,
@@ -425,13 +425,13 @@ impl<'f> ServerConfig {
     }
     pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
     /*- Starting server might fail so return Err(()) if so -*/
-    /// Start the server using this function. It takes a 'ServerConfig'
+    /// Start the server using this function. It takes a 'Server'
     /// struct as input and returns a result, because setting up the
     /// server might fail.
     /// 
     /// ## Example:
     /// ```
-    /// ServerConfig::new()
+    /// Server::new()
     ///     .routes(routes)
     ///     .address("127.0.0.1")
     ///     .port(8080)
