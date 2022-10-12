@@ -84,7 +84,7 @@ pub mod info {
         pub version:&'lf str,
     }
 
-    /// A struct containing all http-methods
+    /// An enum containing all http-methods
     /// that are supported by the server
     #[derive(Debug, Clone, Copy)]
     pub enum Method {

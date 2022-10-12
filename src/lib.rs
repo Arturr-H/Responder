@@ -33,7 +33,7 @@ use std::{
     },
     path::Path,
     collections::HashMap,
-    fs,
+    fs, hash::Hash,
 };
 
 /*- Constants -*/
@@ -46,12 +46,30 @@ const DATA_BUF_POST_INIT:usize = 65536usize;
 /// whilst it's running.
 #[derive(Clone, Copy)]
 pub struct Server {
+    /// The server address
     addr:       &'static str,
+
+    /// The server port
     port:       u16,
+
+    /// The number of threads the current server will use as a maximum
     num_threads:u16,
+
+    /// Serve static files from a directory
     serve:      Option<&'static str>,
+
+    /// Path to a 404 page, if not specified server will return "404 Not Found"
     not_found:  Option<&'static str>,
-    routes:     Route
+
+    /// All http-routes coupled to this server
+    routes:     Route,
+
+    /// Check origin & headers before accepting requests
+    /// with this function taking headers as input. Will
+    /// return a bool indicating wether the request is
+    /// valid or not. If it isn't responding will be handled
+    /// in the origin control function.
+    origin_control:Option<fn(&mut TcpStream, HashMap<&str, &str>) -> bool>
 }
 
 /*- Send diffrent type of function -*/
@@ -157,13 +175,22 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
     let mut request:String = String::from_utf8_lossy(buffer).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
 
+    /*- Check if we should allow origin or not -*/
+    match config.origin_control {
+        Some(origin_control) => {
+            if origin_control(&mut stream, headers.clone()) {
+                return
+            };
+        },
+        None => (),
+    };
+
     /*- Get request info -*/
     let mut body:String = String::new();
     let info:RequestInfo = match RequestInfo::parse_req(&request) {
         Ok(e) => e,
         Err(_) => return
     };
-    dbg!(1);
 
     /*- POST requests often contain huge bodies in terms of bytes, (ex when sending images). The
         DATA_BUF_INIT constant is regularly set to a relativly small number like 2048 which images
@@ -413,13 +440,15 @@ impl<'f> Server {
             num_threads: 1,
             serve: None,
             not_found: None,
-            routes: Route::Stack("", &[])
+            routes: Route::Stack("", &[]),
+            origin_control: None
         }
     }
     pub fn address(&mut self, addr:&'static str) -> &mut Self { self.addr = addr; self }
     pub fn port(&mut self, port:u16) -> &mut Self             {  self.port = port; self }
     pub fn threads(&mut self, num_threads:u16) -> &mut Self   { self.num_threads = num_threads; self }
     pub fn serve(&mut self, serve:&'static str) -> &mut Self  { self.serve = Some(serve); self }
+    pub fn origin_control(&mut self, origin_control:fn(&mut TcpStream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
     pub fn routes(&mut self, routes:Route) -> &mut Self {
         self.routes = routes;
         self

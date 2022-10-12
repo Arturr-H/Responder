@@ -10,7 +10,7 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
-        Route::Tail(Method::POST, "post", Function::SB(upload_image))
+        Route::Tail(Method::POST, "post", Function::SB(upload_image)),
     ]);
 
     /*- Initiaize server -*/
@@ -23,7 +23,7 @@ fn main() {
 }
 
 fn upload_image(stream:&mut TcpStream, body:&String) -> () {
-    println!("online");
+    println!("{body}");
     let mut file = std::fs::File::create("./examples/static/uploaded.png").unwrap();
     file.write_all(body.as_bytes()).unwrap();
     respond(stream, 200u16, None);
