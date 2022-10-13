@@ -476,8 +476,8 @@ impl<'f> Server {
         /*- Get port and address -*/
         let bind_to = &format!(
             "{}:{}",
-            self.port.expect("Port is required to start the server"),
             self.addr.expect("Address is required to start the server"),
+            self.port.expect("Port is required to start the server"),
         );
 
         /*- Start the listener -*/
