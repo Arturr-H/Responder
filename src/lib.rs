@@ -47,10 +47,10 @@ const DATA_BUF_POST_INIT:usize = 65536usize;
 #[derive(Clone, Copy)]
 pub struct Server {
     /// The server address
-    addr:       &'static str,
+    addr:       Option<&'static str>,
 
     /// The server port
-    port:       u16,
+    port:       Option<u16>,
 
     /// The number of threads the current server will use as a maximum
     num_threads:u16,
@@ -435,8 +435,8 @@ impl Function {
 impl<'f> Server {
     pub fn new() -> Server {
         Server {
-            addr: "",
-            port: 0,
+            addr: None,
+            port: None,
             num_threads: 1,
             serve: None,
             not_found: None,
@@ -444,16 +444,16 @@ impl<'f> Server {
             origin_control: None
         }
     }
-    pub fn address(&mut self, addr:&'static str) -> &mut Self { self.addr = addr; self }
-    pub fn port(&mut self, port:u16) -> &mut Self             {  self.port = port; self }
+    pub fn address(&mut self, addr:&'static str) -> &mut Self { self.addr = Some(addr); self }
+    pub fn port(&mut self, port:u16) -> &mut Self             { self.port = Some(port); self }
     pub fn threads(&mut self, num_threads:u16) -> &mut Self   { self.num_threads = num_threads; self }
     pub fn serve(&mut self, serve:&'static str) -> &mut Self  { self.serve = Some(serve); self }
+    pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
     pub fn origin_control(&mut self, origin_control:fn(&mut TcpStream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
     pub fn routes(&mut self, routes:Route) -> &mut Self {
         self.routes = routes;
         self
     }
-    pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
     /*- Starting server might fail so return Err(()) if so -*/
     /// Start the server using this function. It takes a 'Server'
     /// struct as input and returns a result, because setting up the
@@ -472,9 +472,12 @@ impl<'f> Server {
     ///     .unwrap();
     /// ```
     pub fn start(self) -> Result<(), Error> {
+
+        /*- Get port and address -*/
         let bind_to = &format!(
             "{}:{}",
-            self.addr, self.port
+            self.port.expect("Port is required to start the server"),
+            self.addr.expect("Address is required to start the server"),
         );
 
         /*- Start the listener -*/
@@ -520,5 +523,4 @@ impl<'f> Server {
         /*- Return, even though it will never happen -*/
         Ok(())
     }
-
 }
