@@ -16,6 +16,7 @@ pub mod request;
 pub mod thread_handler;
 
 /*- Imports -*/
+use crate::response::ResponseType;
 use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
 use response::{
@@ -196,17 +197,8 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
         DATA_BUF_INIT constant is regularly set to a relativly small number like 2048 which images
         won't fit into, therefore we'll update the buffer array to contain more bytes for POST requests -*/
     if info.method == Method::POST {
-        // let buffer:&mut [u8] = &mut [0u8; DATA_BUF_POST_INIT];
-
-        // /*- Read data into buffer again -*/
-        // match stream.read(buffer) {
-        //     Ok(data) => {println!("aw");data},
-        //     Err(_) => {println!("aw2");return}
-        // };
-
-        // let request:String = String::from_utf8_lossy(buffer).to_string();
-        // println!("{DATA_BUF_POST_INIT}");
         body = request.split("\r\n\r\n").last().unwrap().to_string();
+        // TODO
     }
     let mut full_path:String = String::new();
 
@@ -216,6 +208,7 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
         Err(_) => {
             /*- If no path was found, we'll check if the
                 user want's to serve any static dirs -*/
+            dbg!(5);
             if let Some(static_path) = config.serve {
                 match serve_static_dir(static_path, info.path, &stream) {
                     Ok(_) => (),
@@ -383,32 +376,29 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&TcpStream) -> Result<()
     match fs::File::open(file_path) {
         Ok(_) => {
             /*- Get file content -*/
-            // TODO
-            // let mut file_content = match image::open(file_path) {
-            //     Ok(e) => e.into_bytes(),
-            //     Err(_) => {
-            //         let mut file_content = String::new();
-            //         match e.read_to_string(&mut file_content) {
-            //             Ok(_) => file_content.into_bytes(),
-            //             Err(_) => return Err(())
-            //         }
-            //     }
-            // };
-            // let res:Respond = Respond {
-            //     response_type: ResponseType::guess(file_path),
-            //     content: response::ContentType::Bytes(file_content),
-            //     additional_headers: None
-            // };
+            let mut file_content:String = match fs::read_to_string(file_path) {
+                Ok(e) => e,
+                Err(_) => {
+                    /*- If we can't read the file, we'll send a 404 page -*/
+                    return Err(());
+                }
+            };
+            let res:Respond = Respond {
+                response_type: ResponseType::guess(file_path),
+                content: file_content,
+                additional_headers: None
+            };
 
             /*- Respond -*/
             respond(
                 stream,
                 200u16,
-                None
+                Some(res)
             );
         },
         Err(_) => return Err(())
     }
+
     Ok(())
 }
 
