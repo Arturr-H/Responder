@@ -2,7 +2,7 @@
 
 /*- Imports -*/
 use std::net::TcpStream;
-use responder::{*, request::info::Method, response::with_file, response::respond};
+use responder::{ *, request::info::Method, response::with_file, response::respond };
 
 /*- Initialize -*/
 fn main() {

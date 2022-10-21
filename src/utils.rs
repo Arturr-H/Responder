@@ -31,3 +31,28 @@ pub mod headers {
         end
     }
 }
+
+/*- Controlling request flow -*/
+pub mod control_flow {
+    use std::net::TcpStream;
+    use crate::response::{ respond, Respond };
+
+    pub fn redirect(stream:&mut TcpStream, url:&str) -> () {
+        println!("{url}");
+        respond(
+            stream,
+            308u16,
+            Some(Respond {
+                response_type: crate::response::ResponseType::Html,
+                content: format!(
+                    "<html><head><meta http-equiv=\"refresh\" content=\"0; url={}\" /></head><body><a href=\"{}\">Click here if you are not redirected</a></body></html>",
+                    url,
+                    url
+                ),
+                additional_headers: Some(vec![format!("Location: {}", url)]),
+            })
+        );
+    }
+}
+
+

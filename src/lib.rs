@@ -208,7 +208,6 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
         Err(_) => {
             /*- If no path was found, we'll check if the
                 user want's to serve any static dirs -*/
-            dbg!(5);
             if let Some(static_path) = config.serve {
                 match serve_static_dir(static_path, info.path, &stream) {
                     Ok(_) => (),
