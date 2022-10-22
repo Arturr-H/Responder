@@ -1,8 +1,8 @@
 // Go to localhost:8080/url_params/put_something_here/and_something_here to see the result
 
 /*- Imports -*/
-use std::{net::TcpStream, collections::HashMap};
-use responder::{*, request::info::Method, response::Respond, response::respond};
+use std::collections::HashMap;
+use responder::{*, request::info::Method, response::Respond, stream::Stream };
 
 /*- Initialize -*/
 fn main() {
@@ -26,9 +26,8 @@ fn main() {
         .unwrap();
 }
 
-fn api_endpoint_with_url_params(mut stream:&mut TcpStream, params:&HashMap<&str, &str>) -> () {
-    respond(
-        &mut stream,
+fn api_endpoint_with_url_params(stream:&mut Stream, params:&HashMap<&str, &str>) -> () {
+    stream.respond(
         200u16,
         Respond::text(
             &format!(

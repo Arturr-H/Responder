@@ -1,8 +1,7 @@
 // Go to localhost:8080 to see the result
 
 /*- Imports -*/
-use std::net::TcpStream;
-use responder::{*, request::info::Method, response::Respond, response::respond};
+use responder::{*, request::info::Method, response::Respond, stream::Stream};
 use rand::Rng;
 
 /*- Initialize -*/
@@ -23,13 +22,12 @@ fn main() {
 }
 
 /*- Api endpoints -*/
-fn respond_with_random_number(mut stream:&mut TcpStream) -> () {
+fn respond_with_random_number(stream:&mut Stream) -> () {
     /*- Get random number -*/
     let random_number = rand::thread_rng().gen_range(0..100);
 
     /*- Respond with the random number -*/
-    respond(
-        &mut stream,
+    stream.respond(
         200u16,
         Respond::text(
             &format!(

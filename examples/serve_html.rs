@@ -1,8 +1,7 @@
 // Go to localhost:8080/index.html or localhost:8080/manual_serve to see the result
 
 /*- Imports -*/
-use std::net::TcpStream;
-use responder::{ *, request::info::Method, response::with_file, response::respond };
+use responder::{ *, request::info::Method, response::with_file, stream::Stream };
 
 /*- Initialize -*/
 fn main() {
@@ -23,10 +22,9 @@ fn main() {
 }
 
 /*- Api endpoints -*/
-fn manual_serve(mut stream:&mut TcpStream) -> () {
+fn manual_serve(stream:&mut Stream) -> () {
     /*- Respond with the html file -*/
-    respond(
-        &mut stream,
+    stream.respond(
         200u16,
         with_file("examples/static/manual.html")
     );

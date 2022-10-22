@@ -1,9 +1,9 @@
 /*- Imports -*/
-use std::{net::TcpStream, io::{Write, Read}, path::Path, fs};
-use crate::Server;
+use std::{ io::{ Write, Read }, path::Path, fs };
+use crate::{ Server, stream::Stream };
 
 /*- Constants -*/
-const STATUS_CODES:&[(&u16, &str); 58] = &[
+pub const STATUS_CODES:&[(&u16, &str); 58] = &[
     (&400, "Bad Request"),                      (&500, "Internal Server Error"),
     (&401, "Unauthorized"),                     (&501, "Not Implemented"),
     (&402, "Payment Required"),                 (&502, "Bad Gateway"),
@@ -65,82 +65,6 @@ pub enum ImageType {
 }
 
 /*- Functions -*/
-/// Repond quickly using this function
-/// ## Example
-/// ```
-/// /* Repond with 200 OK */
-/// respond(&mut stream, 200u16, None);
-/// 
-/// /* Repond with text */
-/// respond(&mut stream, 200u16, Some(Respond {
-///     content: String::from("Hello world!"),
-///     response_type: ResponseType::Text,
-/// }));
-/// 
-/// /* Repond with JSON */
-/// respond(&mut stream, 200u16, Some(Respond {
-///     /* Better to use a library like serde
-///        to convert structs to JSON strings */
-///     content: String::from("{\"key\":\"value\"}"),
-///     response_type: ResponseType::Text,
-/// }));
-/// ```
-pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) {
-
-    /*- Get the status string -*/
-    let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&0u16, "Internal error - Missing status code")).1;
-
-    /*- Get the response type -*/
-    let mut response_type:&str = "text/plain";
-    match &respond {
-        Some(r) => {
-            response_type = match &r.response_type {
-                ResponseType::Text => "text/plain",
-                ResponseType::Json => "application/json",
-                ResponseType::Html => "text/html",
-                ResponseType::Image(c)  => {
-                    match c {
-                        ImageType::Jpeg => "image/jpeg",
-                        ImageType::Png => "image/png",
-                        ImageType::Gif => "image/gif",
-                        ImageType::Webp => "image/webp",
-                        ImageType::Svg => "image/svg+xml",
-                    }
-                },
-            };
-        },
-        None => ()
-    };
-
-    /*- If content was provided -*/
-    if let Some(content) = respond {
-        /*- Grab additional headers -*/
-        let additional_headers = match content.additional_headers {
-            Some(headers) => vec!["\r\n", &headers.join("\r\n")].join(""),
-            None => String::new()
-        };
-
-        /*- Write the status & content to the stream -*/
-        if stream.write(
-            format!(
-                "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n{}",
-                status, content.content.len(), response_type, additional_headers, content.content
-            ).as_bytes()
-        ).is_ok() { };
-    }else {
-        /*- Write the status to the stream -*/
-        if stream.write(
-            format!(
-                "HTTP/1.1 {}\r\n\r\n{} {}",
-                status, status, status_msg
-            ).as_bytes()
-        ).is_ok() { };
-    };
-
-    /*- Flush the stream -*/
-    stream.flush().ok();
-}
-
 /*- Send 404 page -*/
 /// Quickly repond with a 404 page, will firstly check
 /// if config.not_found exists, and grab 404 page path
@@ -150,12 +74,12 @@ pub fn respond(mut stream:&TcpStream, status:u16, respond:Option<Respond>) {
 /// ```
 /// not_found(&mut stream, config);
 /// ```
-pub fn not_found(stream:&TcpStream, config:Server) {
+pub fn not_found(stream:&mut Stream, config:Server) {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
-        respond(stream, 404u16, with_file(page));
+        stream.respond(404u16, with_file(page));
     }else {
-        respond(stream, 404u16, None);
+        stream.respond(404u16, None);
     }
 }
 

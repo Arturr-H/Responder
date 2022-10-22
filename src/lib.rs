@@ -15,18 +15,15 @@ pub mod response;
 pub mod request;
 pub mod thread_handler;
 pub mod errors;
+pub mod stream;
 
 /*- Imports -*/
 use crate::response::ResponseType;
 use errors::ConfigError;
 use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
-
-use response::{
-    respond,
-    Respond,
-    not_found,
-};
+use response::{ Respond, not_found };
+use stream::Stream;
 use std::{
     net::{
         TcpStream,
@@ -73,7 +70,7 @@ pub struct Server {
     /// return a bool indicating wether the request is
     /// valid or not. If it isn't responding will be handled
     /// in the origin control function.
-    origin_control:Option<fn(&mut TcpStream, HashMap<&str, &str>) -> bool>
+    origin_control:Option<fn(&mut Stream, HashMap<&str, &str>) -> bool>
 }
 
 /*- Send diffrent type of function -*/
@@ -102,28 +99,28 @@ pub struct Server {
 /// B stands for body
 /// P stands for parameters (url params)
 pub enum Function {
-    /// Function that takes only TcpStream as input,
-    S(fn( &mut TcpStream )),
+    /// Function that takes only Stream as input,
+    S(fn( &mut Stream )),
 
-    /// Function that takes TcpStream and url-params as input,
-    SP(fn( &mut TcpStream, &HashMap<
+    /// Function that takes Stream and url-params as input,
+    SP(fn( &mut Stream, &HashMap<
         &str,
         &str
     > )),
     
-    /// Function that takes TcpStream and body as input,
-    SB(fn( &mut TcpStream, &String )),
+    /// Function that takes Stream and body as input,
+    SB(fn( &mut Stream, &String )),
 
-    /// Function that takes TcpStream and headers as input,
-    SH(fn( &mut TcpStream, &HashMap<
+    /// Function that takes Stream and headers as input,
+    SH(fn( &mut Stream, &HashMap<
         &str,
         &str
     > )),
     
-    /// Function that takes TcpStream,
+    /// Function that takes Stream,
     /// headers and body as params
     SHB(fn(
-        &mut TcpStream,
+        &mut Stream,
         &HashMap<
             &str,
             &str
@@ -165,12 +162,13 @@ pub enum Route {
 }
 
 /*- Functions -*/
-fn handle_req(mut stream:TcpStream, config:&Server) {
+fn handle_req(stream:TcpStream, config:&Server) {
     /*- Data buffer -*/
     let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
+    let mut stream = Stream::from(stream);
 
     /*- Read data into buffer -*/
-    match stream.read(buffer) {
+    match stream.get_mut_inner_ref().read(buffer) {
         Ok(data) => data,
         Err(_) => return
     };
@@ -212,16 +210,16 @@ fn handle_req(mut stream:TcpStream, config:&Server) {
             /*- If no path was found, we'll check if the
                 user want's to serve any static dirs -*/
             if let Some(static_path) = config.serve {
-                match serve_static_dir(static_path, info.path, &stream) {
+                match serve_static_dir(static_path, info.path, &mut stream) {
                     Ok(_) => (),
                     Err(_) => {
                         /*- Now that we didn't find a function, nor
                             a static file, we'll send a 404 page -*/
-                        not_found(&stream, *config);
+                        not_found(&mut stream, *config);
                     }
                 };
             }else {
-                not_found(&stream, *config);
+                not_found(&mut stream, *config);
             };
         },
     };
@@ -240,7 +238,7 @@ fn call_endpoint(
         body
     ):(
         &HashMap<&str, &str>,
-        &mut TcpStream,
+        &mut Stream,
         &String
     )
 ) -> Result<(), ()> {
@@ -362,7 +360,7 @@ fn is_url_param(path:&str) -> (bool, &str) {
 }
 
 /*- Serve static files from a specified dir -*/
-fn serve_static_dir(dir:&str, request_path:&str, stream:&TcpStream) -> Result<(), ()> {
+fn serve_static_dir(dir:&str, request_path:&str, stream:&mut Stream) -> Result<(), ()> {
 
     /*- Get the requested file path -*/
     let path = &[dir, request_path].concat();
@@ -392,8 +390,7 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&TcpStream) -> Result<()
             };
 
             /*- Respond -*/
-            respond(
-                stream,
+            stream.respond(
                 200u16,
                 Some(res)
             );
@@ -408,7 +405,7 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&TcpStream) -> Result<()
 impl Function {
     pub fn call_fn(
         self,
-        stream:&mut TcpStream,
+        stream:&mut Stream,
         headers:&HashMap<&str, &str>,
         params:&HashMap<&str, &str>,
         body:&String,
@@ -436,16 +433,13 @@ impl<'f> Server {
             origin_control: None
         }
     }
-    pub fn address(&mut self, addr:&'static str) -> &mut Self { self.addr = Some(addr); self }
-    pub fn port(&mut self, port:u16) -> &mut Self             { self.port = Some(port); self }
-    pub fn threads(&mut self, num_threads:u16) -> &mut Self   { self.num_threads = num_threads; self }
-    pub fn serve(&mut self, serve:&'static str) -> &mut Self  { self.serve = Some(serve); self }
+    pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }
+    pub fn port(&mut self, port:u16) -> &mut Self                    { self.port = Some(port); self }
+    pub fn threads(&mut self, num_threads:u16) -> &mut Self          { self.num_threads = num_threads; self }
+    pub fn serve(&mut self, serve:&'static str) -> &mut Self         { self.serve = Some(serve); self }
+    pub fn routes(&mut self, routes:Route) -> &mut Self              { self.routes = routes; self }
     pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
-    pub fn origin_control(&mut self, origin_control:fn(&mut TcpStream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
-    pub fn routes(&mut self, routes:Route) -> &mut Self {
-        self.routes = routes;
-        self
-    }
+    pub fn origin_control(&mut self, origin_control:fn(&mut Stream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
     /*- Starting server might fail so return Err(()) if so -*/
     /// Start the server using this function. It takes a 'Server'
     /// struct as input and returns a result, because setting up the

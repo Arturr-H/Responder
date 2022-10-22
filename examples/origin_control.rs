@@ -1,8 +1,7 @@
 // Go to localhost:8080
 
 /*- Imports -*/
-use std::net::TcpStream;
-use responder::{ *, response::respond, request::info::Method };
+use responder::{ *, request::info::Method, stream::Stream, response::Respond };
 
 /*- Initialize -*/
 fn main() {
@@ -20,14 +19,14 @@ fn main() {
             match headers.get("Host") {
                 Some(host) => {
                     if host == &"" {
-                        respond(stream, 401u16, None);
+                        stream.respond(401u16, None);
                         true
                     }else {
                         false
                     }
                 },
                 None => {
-                    respond(stream, 401u16, None);
+                    stream.respond(401u16, None);
                     true
                 }
             }
@@ -37,6 +36,6 @@ fn main() {
         .unwrap();
 }
 
-fn test(stream:&mut TcpStream) -> () {
-    respond(stream, 200u16, None);
+fn test(stream:&mut Stream) -> () {
+    stream.respond(200u16, Respond::text("Hello, world!"));
 }

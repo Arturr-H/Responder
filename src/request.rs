@@ -4,7 +4,7 @@
 )]
 
 /*- Imports -*/
-use crate::{ respond, Respond };
+use crate::{ Respond, stream::Stream };
 use std::{
     net::TcpStream, collections::HashMap
 };
@@ -24,7 +24,7 @@ use std::{
 /// }
 /// ```
 pub fn require_headers(
-    stream:&mut TcpStream,
+    stream:&mut Stream,
     headers:HashMap<&str, &str>,
     required:&[&str]
 ) -> bool {
@@ -46,8 +46,7 @@ pub fn require_headers(
 
     /*- Check if anything was missing -*/
     if !missing_headers.is_empty() {
-        respond(
-            stream,
+        stream.respond(
             400u16,
             Respond::text(
                 &format!(
