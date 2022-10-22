@@ -14,11 +14,14 @@ pub mod utils;
 pub mod response;
 pub mod request;
 pub mod thread_handler;
+pub mod errors;
 
 /*- Imports -*/
 use crate::response::ResponseType;
+use errors::ConfigError;
 use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
+
 use response::{
     respond,
     Respond,
@@ -34,7 +37,7 @@ use std::{
     },
     path::Path,
     collections::HashMap,
-    fs, hash::Hash,
+    fs, hash::Hash, num::ParseIntError,
 };
 
 /*- Constants -*/
@@ -460,13 +463,19 @@ impl<'f> Server {
     ///     .start()
     ///     .unwrap();
     /// ```
-    pub fn start(self) -> Result<(), Error> {
+    pub fn start(self) -> Result<(), ConfigError> {
 
         /*- Get port and address -*/
         let bind_to = &format!(
             "{}:{}",
-            self.addr.expect("Address is required to start the server"),
-            self.port.expect("Port is required to start the server"),
+            match self.addr {
+                Some(e) => e,
+                None => return Err(errors::ConfigError::MissingHost)
+            },
+            match self.port {
+                Some(e) => e,
+                None => return Err(errors::ConfigError::MissingPort)
+            }
         );
 
         /*- Start the listener -*/
@@ -474,7 +483,7 @@ impl<'f> Server {
             Ok(listener) => listener,
 
             /*- If failed to open server on port -*/
-            Err(e) => return Err(e)
+            Err(_) => return Err(ConfigError::HostPortBindingFail)
         };
 
         /*- Log status -*/
