@@ -9,7 +9,7 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
-        Route::Tail(Method::GET, "", Function::S(respond_with_random_number)),
+        Route::Tail(Method::GET, "", respond_with_random_number),
     ]);
 
     /*- Initiaize server -*/

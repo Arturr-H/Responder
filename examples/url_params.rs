@@ -1,8 +1,7 @@
 // Go to localhost:8080/url_params/put_something_here/and_something_here to see the result
 
 /*- Imports -*/
-use std::collections::HashMap;
-use responder::{*, request::info::Method, response::Respond, stream::Stream };
+use responder::{ *, request::info::Method, response::Respond, stream::Stream };
 
 /*- Initialize -*/
 fn main() {
@@ -11,8 +10,7 @@ fn main() {
     let routes = Route::Stack("", &[
         Route::Stack("url_params", &[
             Route::Stack(":param_1:", &[
-                // We'll use 'Function::SP' because it takes parameters as a function param
-                Route::Tail(Method::GET, ":some_other_param:", Function::SP(api_endpoint_with_url_params))
+                Route::Tail(Method::GET, ":some_other_param:", api_endpoint_with_url_params)
             ]),
         ])
     ]);
@@ -26,7 +24,7 @@ fn main() {
         .unwrap();
 }
 
-fn api_endpoint_with_url_params(stream:&mut Stream, params:&HashMap<&str, &str>) -> () {
+fn api_endpoint_with_url_params(stream:&mut Stream) -> () {
     stream.respond(
         200u16,
         Respond::text(
@@ -34,7 +32,7 @@ fn api_endpoint_with_url_params(stream:&mut Stream, params:&HashMap<&str, &str>)
                 "{:?}",
 
                 // Params is a hashmap, just send all keys and values in it
-                &params
+                &stream.params
             )
         )
     );

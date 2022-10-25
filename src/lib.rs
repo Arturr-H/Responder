@@ -73,62 +73,6 @@ pub struct Server {
     origin_control:Option<fn(&mut Stream, HashMap<&str, &str>) -> bool>
 }
 
-/*- Send diffrent type of function -*/
-#[derive(Clone, Copy)]
-/// Rust does not provide a way of doing function overloads, which
-/// would be helpful in some cases. However this enum is like a way
-/// of solving that issue. When creating an API function which will
-/// be executed at some endpoint, the function will automatically
-/// contain three parameters: stream, headers, and body. However most
-/// of the time, you won't need to use ex the body (in ex. GET requests).
-/// So, this enum will let you choose which params you want your function
-/// to use, however all functions need to have a stream as a parameter
-/// because otherwise the server will not be able to respond correctly.
-///
-/// ## Example
-/// ```
-/// /* some_function only takes stream as param */
-/// Route::Tail(Method::GET, "enpoint1", Function::S(some_function)),
-/// 
-/// /* some_function only takes stream and url-params as its parameters */
-/// Route::Tail(Method::GET, "enpoint2", Function::SP(some_function)),
-/// ```
-/// 
-/// S stands for stream
-/// H stands for headers
-/// B stands for body
-/// P stands for parameters (url params)
-pub enum Function {
-    /// Function that takes only Stream as input,
-    S(fn( &mut Stream )),
-
-    /// Function that takes Stream and url-params as input,
-    SP(fn( &mut Stream, &HashMap<
-        &str,
-        &str
-    > )),
-    
-    /// Function that takes Stream and body as input,
-    SB(fn( &mut Stream, &String )),
-
-    /// Function that takes Stream and headers as input,
-    SH(fn( &mut Stream, &HashMap<
-        &str,
-        &str
-    > )),
-    
-    /// Function that takes Stream,
-    /// headers and body as params
-    SHB(fn(
-        &mut Stream,
-        &HashMap<
-            &str,
-            &str
-        >,
-        &String
-    )),
-}
-
 #[derive(Clone, Copy)]
 /// A quick way of nesting routes inside of eachother
 /// stacks can contain either yet another stack, or a 
@@ -157,7 +101,7 @@ pub enum Route {
     Tail(
         Method,
         &'static str,
-        Function
+        fn(&mut Stream) -> ()
     )
 }
 
@@ -202,9 +146,11 @@ fn handle_req(stream:TcpStream, config:&Server) {
         // TODO
     }
     let mut full_path:String = String::new();
+    stream.set_body(body);
+    stream.set_headers(headers);
 
     /*- Get the function or file which is coupled to the request path -*/
-    match call_endpoint(&config.routes, info, &mut full_path, (&headers, &mut stream, &body)) {
+    match call_endpoint(&config.routes, info, &mut full_path, &mut stream) {
         Ok(_) => (),
         Err(_) => {
             /*- If no path was found, we'll check if the
@@ -232,15 +178,7 @@ fn call_endpoint(
     full_path:&mut String,
 
     /*- Function parameters -*/
-    (
-        headers,
-        stream,
-        body
-    ):(
-        &HashMap<&str, &str>,
-        &mut Stream,
-        &String
-    )
+    stream: &mut Stream
 ) -> Result<(), ()> {
 
     /*- Check what type of route it is -*/
@@ -259,7 +197,7 @@ fn call_endpoint(
                 possible_full_path.push('/');
 
                 /*- Recurse -*/
-                match call_endpoint(route, info, &mut possible_full_path, (headers, stream, body)) {
+                match call_endpoint(route, info, &mut possible_full_path, stream) {
                     Ok(_) => {
                         tail_found = true;
 
@@ -280,7 +218,7 @@ fn call_endpoint(
 
             /*- Store url parameters. An url parameter is a "variable" which
                 will be set in the url. Example: localhost:8000/day/:day: -*/
-            let mut params:HashMap<&str, &str> = HashMap::new();
+            let mut params:HashMap<String, String> = HashMap::new();
 
             /*- Push the path to the actual final path -*/
             full_path.push_str(pathname);
@@ -300,7 +238,7 @@ fn call_endpoint(
 
                 match is_url_param(subp) {
                     (true, param_name) => {
-                        params.insert(param_name, request_path);
+                        params.insert(param_name.into(), request_path.to_string());
 
                         /*- Change full_path -*/
                         final_check_url = final_check_url.replace(subp, request_path);
@@ -323,7 +261,8 @@ fn call_endpoint(
                 if method == &info.method {
 
                     /*- Call the associated function -*/
-                    Function::call_fn(*function_ptr, stream, headers, &params, body);
+                    stream.set_params(params);
+                    function_ptr(stream);
 
                     /*- Return success -*/
                     Ok(())
@@ -399,25 +338,6 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&mut Stream) -> Result<(
     }
 
     Ok(())
-}
-
-/*- Method implementation -*/
-impl Function {
-    pub fn call_fn(
-        self,
-        stream:&mut Stream,
-        headers:&HashMap<&str, &str>,
-        params:&HashMap<&str, &str>,
-        body:&String,
-    ) {
-        match self {
-            Self::S(e) => e(stream),
-            Self::SB(e) => e(stream, body),
-            Self::SP(e) => e(stream, params),
-            Self::SH(e) => e(stream, headers),
-            Self::SHB(e) => e(stream, headers, body),
-        }
-    }
 }
 
 /*- Builder pattern for server config struct -*/

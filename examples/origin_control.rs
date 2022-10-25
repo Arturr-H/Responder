@@ -8,7 +8,7 @@ fn main() {
 
     /*- Initiaize routes -*/
     let route = Route::Stack("", &[
-        Route::Tail(Method::GET, "", Function::S(test))
+        Route::Tail(Method::GET, "", test)
     ]);
 
     /*- Initiaize server -*/

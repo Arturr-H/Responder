@@ -1,5 +1,5 @@
 /*- Imports -*/
-use std::{ net::TcpStream, io::Write };
+use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash };
 use crate::response::{ STATUS_CODES, Respond, ResponseType, ImageType };
 
 /*- Structs, enums & unions -*/
@@ -7,12 +7,26 @@ use crate::response::{ STATUS_CODES, Respond, ResponseType, ImageType };
 /// it eliminates the need of importing more libs from std. This will
 /// also be a way of implementing functionality for requests like respond()
 /// in a more simpler fashion.
-pub struct Stream {
+/// 
+/// Also contains request information like body, params and headers
+pub struct Stream<'lf> {
+    /// We won't take a mutable reference of TcpStream because we want
+    /// full ownership of it which will give us mutable access to it anyways.
     stream_inner: TcpStream,
+
+    /// Body is only used in POST requests. Often used for sending & recieving 
+    /// big chunks of data like images or files.
+    pub body: String,
+
+    /// URL-parameters which will be set in routes by using :_: in tail
+    pub params: HashMap<String, String>,
+
+    /// Header keys and values which will specified in fetch requests
+    pub headers: HashMap<&'lf str, &'lf str>,
 }
 
 /*- Method implementations -*/
-impl Stream {
+impl<'a> Stream<'a> {
     /// Repond quickly using this function
     /// ## Example
     /// ```
@@ -36,7 +50,7 @@ impl Stream {
     pub fn respond(&mut self, status:u16, respond:Option<Respond>) {
 
         /*- Get the status string -*/
-        let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&0u16, "Internal error - Missing status code")).1;
+        let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
 
         /*- Get the response type -*/
         let mut response_type:&str = "text/plain";
@@ -123,14 +137,23 @@ impl Stream {
             })
         );
     }
+
+    /*- Append request data (body, headers, url-params) to self -*/
+    pub fn set_body(&mut self, body:String) ->                          &mut Self { self.body = body; self }
+    pub fn set_headers(&mut self, headers:HashMap<&'a str, &'a str>) -> &mut Self { self.headers = headers; self }
+    pub fn set_params(&mut self, params:HashMap<String, String>) ->   &mut Self { self.params = params; self }
 }
 
 /*- Conversions -*/
-impl From<TcpStream> for Stream {
+impl<'a> From<TcpStream> for Stream<'a> {
 
     /// Convert TcpStream into Stream struct.
     fn from(stream_inner: TcpStream) -> Self {
-        Self { stream_inner }
+        Self {
+            stream_inner,
+            body: String::new(),
+            params: HashMap::new(),
+            headers: HashMap::new()
+        }
     }
 }
-
