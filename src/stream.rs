@@ -27,7 +27,7 @@ pub struct Stream<'lf> {
 
 /*- Method implementations -*/
 impl<'a> Stream<'a> {
-    /// Repond quickly using this function
+    /// Respond quickly using this function
     /// ## Example
     /// ```
     /// /* Repond with 200 OK */
@@ -103,6 +103,36 @@ impl<'a> Stream<'a> {
         self.stream_inner.flush().ok();
     }
 
+    /// Respond with just status code
+    /// ## Example
+    /// ```
+    /// /* Repond with 200 OK */
+    /// stream.respond_status(200u16);
+    /// ```
+    pub fn respond_status(&mut self, status:u16) {
+
+        /*- Get the status string -*/
+        let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
+
+        /*- Get the response type -*/
+        let mut response_type:&str = "text/plain";
+        
+        /*- Write the status to the stream -*/
+        if self.stream_inner.write(
+            format!(
+                "HTTP/1.1 {}\r\n\r\n{} {}",
+                status, status, status_msg
+            ).as_bytes()
+        ).is_ok() { };
+
+        /*- Flush the stream -*/
+        self.stream_inner.flush().ok();
+    }
+
+
+
+
+
     /// Get a mutable reference of the inner stream because
     /// the stream_inner key isn't exposed publicly.
     /// 
@@ -141,7 +171,64 @@ impl<'a> Stream<'a> {
     /*- Append request data (body, headers, url-params) to self -*/
     pub fn set_body(&mut self, body:String) ->                          &mut Self { self.body = body; self }
     pub fn set_headers(&mut self, headers:HashMap<&'a str, &'a str>) -> &mut Self { self.headers = headers; self }
-    pub fn set_params(&mut self, params:HashMap<String, String>) ->   &mut Self { self.params = params; self }
+    pub fn set_params(&mut self, params:HashMap<String, String>) ->     &mut Self { self.params = params; self }
+
+    /// Require headers to be specified. If they are not, this
+    /// function will repsond with an array containing missing
+    /// headers. Return true indicating that the request should
+    /// be cancelled or not. 
+    /// 
+    /// ## Examples
+    /// ```
+    /// /*- Return if headers were not specified -*/
+    /// if stream.expect_headers(&["authentification"], true) { return; };
+    /// ```
+    pub fn expect_headers(&mut self, headers:&[&str], ignore_caps:bool) -> bool {
+        let request_headers:Vec<&&str> = self.headers
+                .keys()
+                .collect();
+
+        for expected_header in headers {
+            if !request_headers.contains(&expected_header) {
+                self.respond(400u16, Respond::text(
+                    &format!("This endpoint requires these headers: {headers:?}")
+                ));
+                return true;
+            }
+        };
+
+        false
+    }
+
+    /// Require headers to be specified, but ignore encapsulation. If
+    /// headers are not set, this function will repsond with an array
+    /// containing missing headers. Return true indicating that the
+    /// request should be cancelled or not.
+    /// 
+    /// ## Examples
+    /// ```
+    /// /*- Return if headers were not specified -*/
+    /// if stream.expect_headers(&["authentification"], true) { return; };
+    /// ```
+    pub fn expect_headers_ignore_caps(&mut self, headers:&[&str]) -> bool {
+        let request_headers:Vec<String> = self.headers
+                .keys()
+                .collect::<Vec<&&str>>()
+                .iter()
+                .map(|e| e.to_ascii_lowercase())
+                .collect();
+
+        for expected_header in headers {
+            if !request_headers.contains(&expected_header.to_ascii_lowercase()) {
+                self.respond(400u16, Respond::text(
+                    &format!("This endpoint requires these headers: {headers:?}")
+                ));
+                return true;
+            }
+        };
+
+        false
+    }
 }
 
 /*- Conversions -*/
