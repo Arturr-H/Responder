@@ -10,10 +10,10 @@
 )]
 
 /*- Module imports -*/
-pub mod utils;
+mod utils;
+mod thread_handler;
 pub mod response;
 pub mod request;
-pub mod thread_handler;
 pub mod errors;
 pub mod stream;
 

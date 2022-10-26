@@ -56,13 +56,7 @@ pub enum ResponseType {
 
 /// Server can also respond with images
 #[derive(Clone, Copy, Debug)]
-pub enum ImageType {
-    Jpeg,
-    Png,
-    Gif,
-    Webp,
-    Svg,
-}
+pub enum ImageType { Jpeg, Png, Gif, Webp, Svg }
 
 /*- Functions -*/
 /*- Send 404 page -*/
@@ -151,7 +145,7 @@ impl Respond {
     
     /// Construct a request struct
     pub fn new() -> Self {
-        Respond { response_type: ResponseType::Text, content: Some(String::new()), additional_headers: None }
+        Respond { response_type: ResponseType::Text, content: None, additional_headers: None }
     }
 
     /// Respond with text
@@ -161,7 +155,7 @@ impl Respond {
     /// stream.text("Hello world!");
     /// ```
     pub fn text(&mut self, with:&str) -> Self {
-        if self.content.is_some() {
+        if self.content.is_none() {
             self.response_type = ResponseType::Text;
             self.content = Some(with.to_string());
             self.clone()
@@ -178,7 +172,7 @@ impl Respond {
     /// ```
     /// 
     pub fn json(&mut self, with:&str) -> Self {
-        if self.content.is_some() {
+        if self.content.is_none() {
             self.response_type = ResponseType::Json;
             self.content = Some(with.to_string());
             self.clone()
@@ -195,7 +189,7 @@ impl Respond {
     /// ```
     /// 
     pub fn html(&mut self, with:&str) -> Self {
-        if self.content.is_some() {
+        if self.content.is_none() {
             self.response_type = ResponseType::Html;
             self.content = Some(with.to_string());
             self.clone()
@@ -219,12 +213,10 @@ impl Respond {
     /// ```
     /// 
     pub fn content(&mut self, with:&str, response_type:ResponseType) -> Self {
-        if self.content.is_some() {
-            Respond {
-                response_type,
-                content: Some(with.to_string()),
-                additional_headers: None
-            }
+        if self.content.is_none() {
+            self.response_type = response_type;
+            self.content = Some(with.to_string());
+            self.clone()
         }else {
             panic!("Content buffer already written to");
         }
