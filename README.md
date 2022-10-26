@@ -2,7 +2,7 @@
 
 Easy to use, easy to set up.
 ```rust
-use responder::{ *, request::info::Method };
+use responder::*;
 
 /*- Initialize -*/
 fn main() {
@@ -10,8 +10,8 @@ fn main() {
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
         Route::Stack("path", &[
-            Route::Tail(Method::GET, "enpoint", some_function),
-            Route::Tail(Method::GET, "enpoint2", some_other_function),
+            Route::Get("enpoint", some_function),
+            Route::Get("enpoint2", some_other_function),
         ]),
     ]);
 

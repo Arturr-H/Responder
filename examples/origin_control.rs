@@ -1,14 +1,14 @@
 // Go to localhost:8080
 
 /*- Imports -*/
-use responder::{ *, request::info::Method, stream::Stream, response::Respond };
+use responder::{ *, stream::Stream, response::Respond };
 
 /*- Initialize -*/
 fn main() {
 
     /*- Initiaize routes -*/
     let route = Route::Stack("", &[
-        Route::Tail(Method::GET, "", test)
+        Route::Get("", test)
     ]);
 
     /*- Initiaize server -*/

@@ -85,10 +85,10 @@ pub struct Server {
 /// /*- Initiaize routes -*/
 /// let routes = Route::Stack("", &[
 ///     Route::Stack("nest1", &[
-///         Route::Tail(Method::POST, "value", Function::S(|_| {})),
+///         Route::Tail(Method::POST, "value", |_| {}),
 ///         Route::Stack("nest2", &[
-///             Route::Tail(Method::GET, "value1", Function::S(|_| {})),
-///             Route::Tail(Method::GET, "value2", Function::S(|_| {})),
+///             Route::Tail(Method::GET, "value1", |_| {}),
+///             Route::Tail(Method::GET, "value2", |_| {}),
 ///         ]),
 ///     ]),
 /// ]);
@@ -98,18 +98,21 @@ pub enum Route {
         &'static str,
         &'static [Route]
     ),
-    Tail(
-        Method,
+    Get(
+        &'static str,
+        fn(&mut Stream) -> ()
+    ),
+    Post(
         &'static str,
         fn(&mut Stream) -> ()
     )
 }
 
 /*- Functions -*/
-fn handle_req(stream:TcpStream, config:&Server) {
+fn handle_req(tcp_stream:TcpStream, config:&Server) {
     /*- Data buffer -*/
     let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
-    let mut stream = Stream::from(stream);
+    let mut stream = Stream::from(tcp_stream);
 
     /*- Read data into buffer -*/
     match stream.get_mut_inner_ref().read(buffer) {
@@ -214,7 +217,8 @@ fn call_endpoint(
             if tail_found { Ok(()) }
             else { Err(()) }
         },
-        Route::Tail(method, pathname, function_ptr) => {
+        Route::Post(pathname, function_ptr)
+       | Route::Get(pathname, function_ptr) => {
 
             /*- Store url parameters. An url parameter is a "variable" which
                 will be set in the url. Example: localhost:8000/day/:day: -*/
@@ -258,16 +262,24 @@ fn call_endpoint(
             if final_check_url == info.path {
 
                 /*- If it's the requested method -*/
-                if method == &info.method {
-
-                    /*- Call the associated function -*/
-                    stream.set_params(params);
-                    function_ptr(stream);
-
-                    /*- Return success -*/
-                    Ok(())
-                }else {
-                    Err(())
+                match &info.method {
+                    Method::GET => {
+                        /*- Call the associated function -*/
+                        stream.set_params(params);
+                        function_ptr(stream);
+    
+                        /*- Return success -*/
+                        Ok(())
+                    },
+                    Method::POST => {
+                        /*- Call the associated function -*/
+                        stream.set_params(params);
+                        function_ptr(stream);
+    
+                        /*- Return success -*/
+                        Ok(())
+                    },
+                    _ => Err(())
                 }
             }else {
                 Err(())

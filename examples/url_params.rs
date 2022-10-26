@@ -1,7 +1,7 @@
 // Go to localhost:8080/url_params/put_something_here/and_something_here to see the result
 
 /*- Imports -*/
-use responder::{ *, request::info::Method, response::Respond, stream::Stream };
+use responder::{ *, response::Respond, stream::Stream };
 
 /*- Initialize -*/
 fn main() {
@@ -10,7 +10,7 @@ fn main() {
     let routes = Route::Stack("", &[
         Route::Stack("url_params", &[
             Route::Stack(":param_1:", &[
-                Route::Tail(Method::GET, ":some_other_param:", api_endpoint_with_url_params)
+                Route::Get(":some_other_param:", api_endpoint_with_url_params)
             ]),
         ])
     ]);

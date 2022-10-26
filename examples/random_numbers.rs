@@ -1,7 +1,7 @@
 // Go to localhost:8080 to see the result
 
 /*- Imports -*/
-use responder::{*, request::info::Method, response::Respond, stream::Stream};
+use responder::{*, response::Respond, stream::Stream};
 use rand::Rng;
 
 /*- Initialize -*/
@@ -9,7 +9,7 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
-        Route::Tail(Method::GET, "", respond_with_random_number),
+        Route::Get("", respond_with_random_number),
     ]);
 
     /*- Initiaize server -*/

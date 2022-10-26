@@ -1,14 +1,14 @@
 // Go to localhost:8080/index.html or localhost:8080/manual_serve to see the result
 
 /*- Imports -*/
-use responder::{ *, request::info::Method, response::with_file, stream::Stream };
+use responder::{ *, response::with_file, stream::Stream };
 
 /*- Initialize -*/
 fn main() {
 
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
-        Route::Tail(Method::GET, "manual_serve", manual_serve),
+        Route::Get("manual_serve", manual_serve),
     ]);
 
     /*- Initiaize server -*/
