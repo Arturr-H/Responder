@@ -29,7 +29,7 @@ fn respond_with_random_number(stream:&mut Stream) -> () {
     /*- Respond with the random number -*/
     stream.respond(
         200u16,
-        Respond::text(
+        Respond::new().text(
             &format!(
                 "Random number between 0 and 100: {}",
                 &random_number

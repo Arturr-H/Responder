@@ -6,7 +6,7 @@ use responder::{ *, request::info::Method, response::Respond, stream::Stream };
 /*- Initialize -*/
 fn main() {
 
-    /*- Initiaize routes -*/
+    /*- Initialize routes -*/
     let routes = Route::Stack("", &[
         Route::Stack("url_params", &[
             Route::Stack(":param_1:", &[
@@ -15,7 +15,7 @@ fn main() {
         ])
     ]);
 
-    /*- Initiaize server -*/
+    /*- Initialize server -*/
     Server::new()
         .routes(routes)
         .address("127.0.0.1")
@@ -27,7 +27,7 @@ fn main() {
 fn api_endpoint_with_url_params(stream:&mut Stream) -> () {
     stream.respond(
         200u16,
-        Respond::text(
+        Respond::new().text(
             &format!(
                 "{:?}",
 

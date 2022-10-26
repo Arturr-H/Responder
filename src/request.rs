@@ -48,7 +48,7 @@ pub fn require_headers(
     if !missing_headers.is_empty() {
         stream.respond(
             400u16,
-            Respond::text(
+            Respond::new().text(
                 &format!(
                     "Missing headers: [{:?}]",
                     missing_headers
@@ -149,16 +149,16 @@ pub mod info {
             );
 
             /*- Parse the method -*/
-            let method = match method {
-                "GET" =>    Method::GET,
-                "POST" =>   Method::POST,
-                "PUT" =>    Method::PUT,
-                "DELETE" => Method::DELETE,
-                "HEAD" =>   Method::HEAD,
+            let method = match &*method.to_ascii_uppercase() {
+                "GET"     => Method::GET,
+                "POST"    => Method::POST,
+                "PUT"     => Method::PUT,
+                "DELETE"  => Method::DELETE,
+                "HEAD"    => Method::HEAD,
                 "OPTIONS" => Method::OPTIONS,
                 "CONNECT" => Method::CONNECT,
-                "TRACE" =>  Method::TRACE,
-                "PATCH" =>  Method::PATCH,
+                "TRACE"   => Method::TRACE,
+                "PATCH"   => Method::PATCH,
                 _ => Method::UNKNOWN,
             };
 

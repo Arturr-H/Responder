@@ -19,14 +19,14 @@ fn main() {
             match headers.get("Host") {
                 Some(host) => {
                     if host == &"" {
-                        stream.respond(401u16, None);
+                        stream.respond_status(401);
                         true
                     }else {
                         false
                     }
                 },
                 None => {
-                    stream.respond(401u16, None);
+                    stream.respond_status(401);
                     true
                 }
             }
@@ -37,5 +37,5 @@ fn main() {
 }
 
 fn test(stream:&mut Stream) -> () {
-    stream.respond(200u16, Respond::text("Hello, world!"));
+    stream.respond(200u16, Respond::new().text("Hello, world!"));
 }

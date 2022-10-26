@@ -10,8 +10,8 @@ fn main() {
     /*- Initiaize routes -*/
     let routes = Route::Stack("", &[
         Route::Stack("path", &[
-            Route::Tail(Method::GET, "enpoint", Function::S(some_function)),
-            Route::Tail(Method::GET, "enpoint2", Function::S(some_other_function)),
+            Route::Tail(Method::GET, "enpoint", some_function),
+            Route::Tail(Method::GET, "enpoint2", some_other_function),
         ]),
     ]);
 

@@ -47,37 +47,31 @@ impl<'a> Stream<'a> {
     ///     response_type: ResponseType::Text,
     /// }));
     /// ```
-    pub fn respond(&mut self, status:u16, respond:Option<Respond>) {
+    pub fn respond(&mut self, status:u16, respond:Respond) {
 
         /*- Get the status string -*/
         let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
 
         /*- Get the response type -*/
-        let mut response_type:&str = "text/plain";
-        match &respond {
-            Some(r) => {
-                response_type = match &r.response_type {
-                    ResponseType::Text => "text/plain",
-                    ResponseType::Json => "application/json",
-                    ResponseType::Html => "text/html",
-                    ResponseType::Image(c)  => {
-                        match c {
-                            ImageType::Jpeg => "image/jpeg",
-                            ImageType::Png => "image/png",
-                            ImageType::Gif => "image/gif",
-                            ImageType::Webp => "image/webp",
-                            ImageType::Svg => "image/svg+xml",
-                        }
-                    },
-                };
+        let mut response_type:&str = match respond.response_type {
+            ResponseType::Text => "text/plain",
+            ResponseType::Json => "application/json",
+            ResponseType::Html => "text/html",
+            ResponseType::Image(c)  => {
+                match c {
+                    ImageType::Jpeg => "image/jpeg",
+                    ImageType::Png => "image/png",
+                    ImageType::Gif => "image/gif",
+                    ImageType::Webp => "image/webp",
+                    ImageType::Svg => "image/svg+xml",
+                }
             },
-            None => ()
         };
 
         /*- If content was provided -*/
-        if let Some(content) = respond {
+        if let Some(content) = respond.content {
             /*- Grab additional headers -*/
-            let additional_headers = match content.additional_headers {
+            let additional_headers = match respond.additional_headers {
                 Some(headers) => vec!["\r\n", &headers.join("\r\n")].join(""),
                 None => String::new()
             };
@@ -86,7 +80,7 @@ impl<'a> Stream<'a> {
             if self.stream_inner.write(
                 format!(
                     "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n{}",
-                    status, content.content.len(), response_type, additional_headers, content.content
+                    status, content.len(), response_type, additional_headers, content
                 ).as_bytes()
             ).is_ok() { };
         }else {
@@ -116,7 +110,7 @@ impl<'a> Stream<'a> {
 
         /*- Get the response type -*/
         let mut response_type:&str = "text/plain";
-        
+
         /*- Write the status to the stream -*/
         if self.stream_inner.write(
             format!(
@@ -156,15 +150,15 @@ impl<'a> Stream<'a> {
     pub fn redirect(&mut self, url:&str) -> () {
         self.respond(
             308u16,
-            Some(Respond {
-                response_type: crate::response::ResponseType::Html,
-                content: format!(
-                    "<html><head><meta http-equiv=\"refresh\" content=\"0; url={}\" /></head><body><a href=\"{}\">Click here if you are not redirected</a></body></html>",
-                    url,
-                    url
-                ),
-                additional_headers: Some(vec![format!("Location: {}", url)]),
-            })
+            Respond::new()
+                .html(
+                    &format!(
+                        "<html><head><meta http-equiv=\"refresh\" content=\"0; url={}\" /></head><body><a href=\"{}\">Click here if you are not redirected</a></body></html>",
+                        url,
+                        url
+                    )
+                )
+                .headers(vec![format!("Location: {}", url)])
         );
     }
 
@@ -190,9 +184,12 @@ impl<'a> Stream<'a> {
 
         for expected_header in headers {
             if !request_headers.contains(&expected_header) {
-                self.respond(400u16, Respond::text(
-                    &format!("This endpoint requires these headers: {headers:?}")
-                ));
+                self.respond(
+                    400u16,
+                    Respond::new().text(
+                        &format!("This endpoint requires these headers: {headers:?}")
+                    )
+                );
                 return true;
             }
         };
@@ -220,9 +217,11 @@ impl<'a> Stream<'a> {
 
         for expected_header in headers {
             if !request_headers.contains(&expected_header.to_ascii_lowercase()) {
-                self.respond(400u16, Respond::text(
-                    &format!("This endpoint requires these headers: {headers:?}")
-                ));
+                self.respond(
+                    400u16,
+                    Respond::new().text(
+                        &format!("This endpoint requires these headers: {headers:?}")
+                    ));
                 return true;
             }
         };

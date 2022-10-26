@@ -324,14 +324,14 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&mut Stream) -> Result<(
             };
             let res:Respond = Respond {
                 response_type: ResponseType::guess(file_path),
-                content: file_content,
+                content: Some(file_content),
                 additional_headers: None
             };
 
             /*- Respond -*/
             stream.respond(
                 200u16,
-                Some(res)
+                res
             );
         },
         Err(_) => return Err(())

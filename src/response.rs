@@ -41,7 +41,7 @@ pub const STATUS_CODES:&[(&u16, &str); 58] = &[
 /// as input, which will contain a content type and content
 pub struct Respond {
     pub response_type:ResponseType,
-    pub content:      String,
+    pub content:      Option<String>,
     pub additional_headers:Option<Vec<String>>
 }
 
@@ -79,7 +79,7 @@ pub fn not_found(stream:&mut Stream, config:Server) {
     if let Some(page) = config.not_found {
         stream.respond(404u16, with_file(page));
     }else {
-        stream.respond(404u16, None);
+        stream.respond_status(404u16);
     }
 }
 
@@ -91,28 +91,24 @@ pub fn not_found(stream:&mut Stream, config:Server) {
 /// ```
 /// respond(&mut stream, 200u16, with_file("/path/to/file.png"))
 /// ```
-pub fn with_file(path:&str) -> Option<Respond> {
+pub fn with_file(path:&str) -> Respond {
 
     /*- Grab the path -*/
     let path = Path::new(path);
 
     /*- Open file -*/
-    let content:Option<String> = match fs::File::open(path) {
+    let content:String = match fs::File::open(path) {
         Ok(mut e) => {
             let mut content:String = String::new();
             if e.read_to_string(&mut content).is_ok() { }
 
-            Some(content)
+            content
         },
-        Err(_) => None
+        Err(_) => String::new()
     };
 
     /*- Return -*/
-    content.map(|data| Respond {
-        content: data,
-        response_type: ResponseType::guess(path),
-        additional_headers: None
-    })
+    Respond::new().content(&content, ResponseType::guess(path))
 }
 
 /*- Method implementations -*/
@@ -152,18 +148,85 @@ impl ResponseType {
     }
 }
 impl Respond {
-    /// Quickly respond with text
-    /// 
-    /// ## Examples
-    /// respond(&mut stream, 200u16, Respond::text("Hello world!"))
-    pub fn text(with:&str) -> Option<Respond> {
-        Some(
-            Respond { response_type: ResponseType::Text, content: with.to_string(), additional_headers: None }
-        )
+    
+    /// Construct a request struct
+    pub fn new() -> Self {
+        Respond { response_type: ResponseType::Text, content: Some(String::new()), additional_headers: None }
     }
 
-    /// Respond without any content whatsoever
-    pub fn empty() -> Option<()> {
-        None
+    /// Respond with text
+    /// 
+    /// ## Examples
+    /// ```
+    /// stream.text("Hello world!");
+    /// ```
+    pub fn text(&mut self, with:&str) -> Self {
+        if self.content.is_some() {
+            self.response_type = ResponseType::Text;
+            self.content = Some(with.to_string());
+            self.clone()
+        }else {
+            panic!("Content buffer already written to");
+        }
+    }
+
+    /// Respond with json
+    /// 
+    /// ## Examples
+    /// ```
+    /// stream.json("\{\"hello\":\"world!\"\}");
+    /// ```
+    /// 
+    pub fn json(&mut self, with:&str) -> Self {
+        if self.content.is_some() {
+            self.response_type = ResponseType::Json;
+            self.content = Some(with.to_string());
+            self.clone()
+        }else {
+            panic!("Content buffer already written to");
+        }
+    }
+
+    /// Respond with html
+    /// 
+    /// ## Examples
+    /// ```
+    /// stream.html("<html><body><h1>Hello!</h1></body></html>");
+    /// ```
+    /// 
+    pub fn html(&mut self, with:&str) -> Self {
+        if self.content.is_some() {
+            self.response_type = ResponseType::Html;
+            self.content = Some(with.to_string());
+            self.clone()
+        }else {
+            panic!("Content buffer already written to");
+        }
+    }
+
+    /// Set additional headers
+    pub fn headers(&mut self, headers:Vec<String>) -> Self {
+        self.additional_headers = Some(headers);
+        self.clone()
+    }
+
+    /// Respond with content as a string. Will need response
+    /// type as a parameter
+    /// 
+    /// ## Examples
+    /// ```
+    /// stream.content("<html><body><h1>Hello!</h1></body></html>", ResponseType::Html);
+    /// ```
+    /// 
+    pub fn content(&mut self, with:&str, response_type:ResponseType) -> Self {
+        if self.content.is_some() {
+            Respond {
+                response_type,
+                content: Some(with.to_string()),
+                additional_headers: None
+            }
+        }else {
+            panic!("Content buffer already written to");
+        }
     }
 }
