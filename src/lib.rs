@@ -65,6 +65,9 @@ pub struct Server {
     /// All http-routes coupled to this server
     routes:     Route,
 
+    /// The write buffer size when recieving requests in bytes
+    init_buf:   Option<usize>,
+
     /// Check origin & headers before accepting requests
     /// with this function taking headers as input. Will
     /// return a bool indicating wether the request is
@@ -111,7 +114,7 @@ pub enum Route {
 /*- Functions -*/
 fn handle_req(tcp_stream:TcpStream, config:&Server) {
     /*- Data buffer -*/
-    let buffer:&mut Vec<u8> = &mut vec![0u8; DATA_BUF_POST_INIT];
+    let buffer:&mut Vec<u8> = &mut vec![0u8; config.init_buf.unwrap_or(DATA_BUF_POST_INIT)];
     let mut stream = Stream::from(tcp_stream);
 
     /*- Read data into buffer -*/
@@ -145,7 +148,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
         DATA_BUF_INIT constant is regularly set to a relativly small number like 2048 which images
         won't fit into, therefore we'll update the buffer array to contain more bytes for POST requests -*/
     if info.method == Method::POST {
-        body = request.split("\r\n\r\n").last().unwrap().to_string();
+        body = request.split("\r\n\r\n").last().unwrap_or("").to_string();
         // TODO
     }
     let mut full_path:String = String::new();
@@ -362,16 +365,19 @@ impl<'f> Server {
             serve: None,
             not_found: None,
             routes: Route::Stack("", &[]),
+            init_buf: None,
             origin_control: None
         }
     }
-    pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }
     pub fn port(&mut self, port:u16) -> &mut Self                    { self.port = Some(port); self }
-    pub fn threads(&mut self, num_threads:u16) -> &mut Self          { self.num_threads = num_threads; self }
     pub fn serve(&mut self, serve:&'static str) -> &mut Self         { self.serve = Some(serve); self }
     pub fn routes(&mut self, routes:Route) -> &mut Self              { self.routes = routes; self }
+    pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }
+    pub fn threads(&mut self, num_threads:u16) -> &mut Self          { self.num_threads = num_threads; self }
     pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
+    pub fn init_buf_size(&mut self, buf_size:usize) -> &mut Self     { self.init_buf = Some(buf_size); self }
     pub fn origin_control(&mut self, origin_control:fn(&mut Stream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
+    
     /*- Starting server might fail so return Err(()) if so -*/
     /// Start the server using this function. It takes a 'Server'
     /// struct as input and returns a result, because setting up the
