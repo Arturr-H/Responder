@@ -14,6 +14,9 @@ pub struct Stream<'lf> {
     /// full ownership of it which will give us mutable access to it anyways.
     stream_inner: TcpStream,
 
+    /// If stream_inner has aleady been written to (Should only be written to once)
+    buf_written_to: bool,
+
     /// Body is only used in POST requests. Often used for sending & recieving 
     /// big chunks of data like images or files.
     pub body: String,
@@ -22,7 +25,7 @@ pub struct Stream<'lf> {
     pub params: HashMap<String, String>,
 
     /// Header keys and values which will specified in fetch requests
-    pub headers: HashMap<&'lf str, &'lf str>,
+    pub headers: HashMap<&'lf str, &'lf str>
 }
 
 /*- Method implementations -*/
@@ -48,7 +51,10 @@ impl<'a> Stream<'a> {
     /// }));
     /// ```
     pub fn respond(&mut self, status:u16, respond:Respond) {
-
+        /*- Check buffer write access -*/
+        if self.buf_written_to { return; };
+        self.buf_written_to = true;
+        
         /*- Get the status string -*/
         let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
 
@@ -104,6 +110,9 @@ impl<'a> Stream<'a> {
     /// stream.respond_status(200u16);
     /// ```
     pub fn respond_status(&mut self, status:u16) {
+        /*- Check buffer write access -*/
+        if self.buf_written_to { return; };
+        self.buf_written_to = true;
 
         /*- Get the status string -*/
         let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
@@ -148,6 +157,10 @@ impl<'a> Stream<'a> {
     /// }
     /// ```
     pub fn redirect(&mut self, url:&str) -> () {
+        /*- Check buffer write access -*/
+        if self.buf_written_to { return; };
+        self.buf_written_to = true;
+
         self.respond(
             308u16,
             Respond::new()
@@ -237,6 +250,7 @@ impl<'a> From<TcpStream> for Stream<'a> {
     fn from(stream_inner: TcpStream) -> Self {
         Self {
             stream_inner,
+            buf_written_to: false,
             body: String::new(),
             params: HashMap::new(),
             headers: HashMap::new()

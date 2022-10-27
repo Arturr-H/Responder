@@ -26,7 +26,7 @@ fn test(stream:&mut Stream) -> () {
 }
 
 fn origin_control_function(stream:&Stream) -> Result<(), u16> {
-    match stream.headers.get("aost") {
+    match stream.headers.get("Host") {
         Some(host) => {
             if host == &"" {
                 Err(401)
