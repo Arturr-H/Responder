@@ -73,7 +73,7 @@ pub struct Server {
     /// return a bool indicating wether the request is
     /// valid or not. If it isn't responding will be handled
     /// in the origin control function.
-    origin_control:Option<fn(&mut Stream, HashMap<&str, &str>) -> bool>
+    origin_control:Option<fn(&Stream) -> Result<(), u16>>
 }
 
 #[derive(Clone, Copy)]
@@ -97,14 +97,28 @@ pub struct Server {
 /// ]);
 /// ```
 pub enum Route {
+    /// A stack containing either an endpoint like Get or Post, or another Stack
     Stack(
         &'static str,
         &'static [Route]
     ),
+
+    /// A stack with all it's routes protected by an origin control function.
+    /// The origin control function returns a result which contains status code
+    /// if request was not accepted
+    ControlledStack(
+        fn(&Stream) -> Result<(), u16>,
+        &'static str,
+        &'static [Route]
+    ),
+
+    /// Enpoint. Get request
     Get(
         &'static str,
         fn(&mut Stream) -> ()
     ),
+
+    /// Enpoint. Post request
     Post(
         &'static str,
         fn(&mut Stream) -> ()
@@ -130,7 +144,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     /*- Check if we should allow origin or not -*/
     match config.origin_control {
         Some(origin_control) => {
-            if origin_control(&mut stream, headers.clone()) {
+            if origin_control(&mut stream).is_ok() {
                 return
             };
         },
@@ -158,7 +172,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     /*- Get the function or file which is coupled to the request path -*/
     match call_endpoint(&config.routes, info, &mut full_path, &mut stream) {
         Ok(_) => (),
-        Err(_) => {
+        Err(optional_status) => {
             /*- If no path was found, we'll check if the
                 user want's to serve any static dirs -*/
             if let Some(static_path) = config.serve {
@@ -167,11 +181,19 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
                     Err(_) => {
                         /*- Now that we didn't find a function, nor
                             a static file, we'll send a 404 page -*/
-                        not_found(&mut stream, *config);
-                    }
+                        if let Some(status) = optional_status {
+                            stream.respond_status(status);
+                        }else {
+                            not_found(&mut stream, *config);
+                        };
+                    },
                 };
             }else {
-                not_found(&mut stream, *config);
+                if let Some(status) = optional_status {
+                    stream.respond_status(status);
+                }else {
+                    not_found(&mut stream, *config);
+                };
             };
         },
     };
@@ -185,41 +207,49 @@ fn call_endpoint(
 
     /*- Function parameters -*/
     stream: &mut Stream
-) -> Result<(), ()> {
+) -> Result<(), Option<u16>> {
+
+    /*- ControlledStack and Stack have similar functionality,
+        the diffrence is that ControlledStack needs origin
+        control funciton to be called in the beginning -*/
+    if let Route::ControlledStack(_, pathname, next_routes) | Route::Stack(pathname, next_routes) = routes {
+        if let Route::ControlledStack(fnc, _, _) = routes {
+            /*- If request didn't pass origin control filters, return with error code -*/
+            if let Err(status) = fnc(stream) { return Err(Some(status)); };
+        }
+            
+        /*- If a tail was found -*/
+        let mut tail_found:bool = false;
+
+        /*- Iterate over all stacks and tails -*/
+        'tail_search: for route in next_routes.iter() {
+
+            /*- Push the path -*/
+            let mut possible_full_path = full_path.clone();
+            possible_full_path.push_str(pathname);
+            possible_full_path.push('/');
+
+            /*- Recurse -*/
+            match call_endpoint(route, info, &mut possible_full_path, stream) {
+                Ok(_) => {
+                    tail_found = true;
+
+                    /*- Push the path to the actual final path -*/
+                    full_path.push_str(pathname);
+                    full_path.push('/');
+                    break 'tail_search;
+                },
+                Err(_) => continue
+            };
+        };
+
+        /*- Return -*/
+        if tail_found { return Ok(()); }
+        else { return Err(None); }
+    }
 
     /*- Check what type of route it is -*/
     match routes {
-        Route::Stack(pathname, routes) => {
-
-            /*- If a tail was found -*/
-            let mut tail_found:bool = false;
-
-            /*- Iterate over all stacks and tails -*/
-            'tail_search: for route in routes.iter() {
-
-                /*- Push the path -*/
-                let mut possible_full_path = full_path.clone();
-                possible_full_path.push_str(pathname);
-                possible_full_path.push('/');
-
-                /*- Recurse -*/
-                match call_endpoint(route, info, &mut possible_full_path, stream) {
-                    Ok(_) => {
-                        tail_found = true;
-
-                        /*- Push the path to the actual final path -*/
-                        full_path.push_str(pathname);
-                        full_path.push('/');
-                        break 'tail_search;
-                    },
-                    Err(_) => continue
-                };
-            };
-
-            /*- Return -*/
-            if tail_found { Ok(()) }
-            else { Err(()) }
-        },
         Route::Post(pathname, function_ptr)
        | Route::Get(pathname, function_ptr) => {
 
@@ -240,20 +270,20 @@ fn call_endpoint(
                 /*- Get the current searched subpath to check wether they are the same -*/
                 let subp:&str = match final_subpaths.get(index) {
                     Some(e) => e,
-                    None => return Err(())
+                    None => return Err(None)
                 };
 
                 match is_url_param(subp) {
-                    (true, param_name) => {
+                    Some(param_name) => {
                         params.insert(param_name.into(), request_path.to_string());
 
                         /*- Change full_path -*/
                         final_check_url = final_check_url.replace(subp, request_path);
                         continue;
                     },
-                    (false, _) => {
+                    None => {
                         if request_path != &subp {
-                            return Err(());
+                            return Err(None);
                         }else {
                             continue;
                         };
@@ -282,12 +312,13 @@ fn call_endpoint(
                         /*- Return success -*/
                         Ok(())
                     },
-                    _ => Err(())
+                    _ => Err(Some(405u16)) // Method not allowed
                 }
             }else {
-                Err(())
+                Err(None)
             }
         },
+        _ => Err(Some(405u16)) // Method not allowed
     }
 }
 
@@ -305,11 +336,11 @@ fn get_subpaths(path:&str) -> Vec<&str> {
 }
 
 /*- Check if a path is a url parameter -*/
-fn is_url_param(path:&str) -> (bool, &str) {
+fn is_url_param(path:&str) -> Option<&str> {
     if path.starts_with(':') && path.ends_with(':') {
-        (true, &path[1..path.len()-1])
+        Some(&path[1..path.len()-1])
     }else {
-        (false, "")
+        None
     }
 }
 
@@ -376,7 +407,7 @@ impl<'f> Server {
     pub fn threads(&mut self, num_threads:u16) -> &mut Self          { self.num_threads = num_threads; self }
     pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
     pub fn init_buf_size(&mut self, buf_size:usize) -> &mut Self     { self.init_buf = Some(buf_size); self }
-    pub fn origin_control(&mut self, origin_control:fn(&mut Stream, HashMap<&str, &str>) -> bool) -> &mut Self  { self.origin_control = Some(origin_control); self }
+    pub fn origin_control(&mut self, origin_control:fn(&Stream) -> Result<(), u16>) -> &mut Self  { self.origin_control = Some(origin_control); self }
     
     /*- Starting server might fail so return Err(()) if so -*/
     /// Start the server using this function. It takes a 'Server'
