@@ -54,7 +54,7 @@ impl<'a> Stream<'a> {
         /*- Check buffer write access -*/
         if self.buf_written_to { return; };
         self.buf_written_to = true;
-        
+
         /*- Get the status string -*/
         let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
 
@@ -132,10 +132,6 @@ impl<'a> Stream<'a> {
         self.stream_inner.flush().ok();
     }
 
-
-
-
-
     /// Get a mutable reference of the inner stream because
     /// the stream_inner key isn't exposed publicly.
     /// 
@@ -157,10 +153,6 @@ impl<'a> Stream<'a> {
     /// }
     /// ```
     pub fn redirect(&mut self, url:&str) -> () {
-        /*- Check buffer write access -*/
-        if self.buf_written_to { return; };
-        self.buf_written_to = true;
-
         self.respond(
             308u16,
             Respond::new()

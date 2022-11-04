@@ -400,13 +400,32 @@ impl<'f> Server {
             origin_control: None
         }
     }
+    /// `[REQUIRED]` The server port
     pub fn port(&mut self, port:u16) -> &mut Self                    { self.port = Some(port); self }
+    
+    /// Serve static files from a directory
     pub fn serve(&mut self, serve:&'static str) -> &mut Self         { self.serve = Some(serve); self }
+    
+    /// All http-routes coupled to this server
     pub fn routes(&mut self, routes:Route) -> &mut Self              { self.routes = routes; self }
+    
+    /// `[REQUIRED]` The server address
     pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }
+    
+    /// The number of threads the current server will use as a maximum
     pub fn threads(&mut self, num_threads:u16) -> &mut Self          { self.num_threads = num_threads; self }
+    
+    /// Path to a 404 page, if not specified server will return "404 Not Found"
     pub fn not_found(&mut self, not_found:&'static str) -> &mut Self { self.not_found = Some(not_found); self }
+    
+    /// The write buffer size when recieving requests in bytes
     pub fn init_buf_size(&mut self, buf_size:usize) -> &mut Self     { self.init_buf = Some(buf_size); self }
+    
+    /// Check origin & headers before accepting requests
+    /// with this function taking headers as input. Will
+    /// return a bool indicating wether the request is
+    /// valid or not. If it isn't responding will be handled
+    /// in the origin control function.
     pub fn origin_control(&mut self, origin_control:fn(&Stream) -> Result<(), u16>) -> &mut Self  { self.origin_control = Some(origin_control); self }
     
     /*- Starting server might fail so return Err(()) if so -*/
