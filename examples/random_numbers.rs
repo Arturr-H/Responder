@@ -1,7 +1,7 @@
 // Go to localhost:8080 to see the result
 
 /*- Imports -*/
-use responder::{*, response::Respond, stream::Stream};
+use responder::prelude::*;
 use rand::Rng;
 
 /*- Initialize -*/

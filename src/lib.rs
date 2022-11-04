@@ -16,14 +16,15 @@ pub mod response;
 pub mod request;
 pub mod errors;
 pub mod stream;
+pub mod prelude;
 
 /*- Imports -*/
 use crate::response::ResponseType;
 use errors::ConfigError;
 use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
-use response::{ Respond, not_found };
-use stream::Stream;
+pub use response::{ Respond, not_found };
+pub use stream::Stream;
 use std::{
     net::{
         TcpStream,

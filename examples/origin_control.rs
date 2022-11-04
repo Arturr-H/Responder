@@ -1,7 +1,7 @@
 // Go to localhost:8080
 
 /*- Imports -*/
-use responder::{ *, stream::Stream, response::Respond };
+use responder::prelude::*;
 
 /*- Initialize -*/
 fn main() {

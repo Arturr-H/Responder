@@ -1,7 +1,7 @@
 // Go to localhost:8080/index.html or localhost:8080/manual_serve to see the result
 
 /*- Imports -*/
-use responder::{ *, response::with_file, stream::Stream };
+use responder::prelude::*;
 
 /*- Initialize -*/
 fn main() {

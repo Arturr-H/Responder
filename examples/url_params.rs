@@ -1,7 +1,7 @@
 // Go to localhost:8080/url_params/put_something_here/and_something_here to see the result
 
 /*- Imports -*/
-use responder::{ *, response::Respond, stream::Stream };
+use responder::prelude::*;
 
 /*- Initialize -*/
 fn main() {
