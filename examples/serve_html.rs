@@ -7,9 +7,9 @@ use responder::{ *, response::with_file, stream::Stream };
 fn main() {
 
     /*- Initiaize routes -*/
-    let routes = Route::Stack("", &[
+    let routes = &[
         Route::Get("manual_serve", manual_serve),
-    ]);
+    ];
 
     /*- Initiaize server -*/
     Server::new()

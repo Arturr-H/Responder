@@ -63,12 +63,12 @@ pub struct Server {
     not_found:  Option<&'static str>,
 
     /// All http-routes coupled to this server
-    routes:     Route,
+    routes:     &'static [Route],
 
     /// The write buffer size when recieving requests in bytes
     init_buf:   Option<usize>,
 
-    /// Check origin & headers before accepting requests
+    /// Check origin and headers before accepting requests
     /// with this function taking headers as input. Will
     /// return a bool indicating wether the request is
     /// valid or not. If it isn't responding will be handled
@@ -78,23 +78,22 @@ pub struct Server {
 
 #[derive(Clone, Copy)]
 /// A quick way of nesting routes inside of eachother
-/// stacks can contain either yet another stack, or a 
-/// tail, which will act as an API-endpoint. This enum
-/// is used for the server config when initializing the
-/// server.
+/// stacks can contain either yet another stack, or an 
+/// endpoint like Get or Post. This enum is used for
+/// the server config when initializing the server.
 /// 
 /// ## Examples
 /// ```
 /// /*- Initiaize routes -*/
-/// let routes = Route::Stack("", &[
+/// let routes = &[
 ///     Route::Stack("nest1", &[
-///         Route::Tail(Method::POST, "value", |_| {}),
+///         Route::Post("value", |_| {}),
 ///         Route::Stack("nest2", &[
-///             Route::Tail(Method::GET, "value1", |_| {}),
-///             Route::Tail(Method::GET, "value2", |_| {}),
+///             Route::Get("value1", |_| {}),
+///             Route::Get("value2", |_| {}),
 ///         ]),
 ///     ]),
-/// ]);
+/// ];
 /// ```
 pub enum Route {
     /// A stack containing either an endpoint like Get or Post, or another Stack
@@ -165,37 +164,35 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
         body = request.split("\r\n\r\n").last().unwrap_or("").to_string();
         // TODO
     }
-    let mut full_path:String = String::new();
+    let mut full_path:String = String::from("/");
     stream.set_body(body);
     stream.set_headers(headers);
 
     /*- Get the function or file which is coupled to the request path -*/
-    match call_endpoint(&config.routes, info, &mut full_path, &mut stream) {
-        Ok(_) => (),
-        Err(optional_status) => {
-            /*- If no path was found, we'll check if the
-                user want's to serve any static dirs -*/
-            if let Some(static_path) = config.serve {
-                match serve_static_dir(static_path, info.path, &mut stream) {
-                    Ok(_) => (),
-                    Err(_) => {
-                        /*- Now that we didn't find a function, nor
-                            a static file, we'll send a 404 page -*/
-                        if let Some(status) = optional_status {
-                            stream.respond_status(status);
-                        }else {
-                            not_found(&mut stream, *config);
-                        };
-                    },
-                };
-            }else {
+    for route in config.routes {
+        match call_endpoint(&route, info, &mut full_path, &mut stream) {
+            Ok(_) => return,
+            Err(optional_status) => {
                 if let Some(status) = optional_status {
                     stream.respond_status(status);
-                }else {
-                    not_found(&mut stream, *config);
-                };
-            };
-        },
+                }
+            },
+        };
+    };
+
+    /*- If no path was found, we'll check if the
+        user want's to serve any static dirs -*/
+    if let Some(static_path) = config.serve {
+        match serve_static_dir(static_path, info.path, &mut stream) {
+            Ok(_) => (),
+            Err(_) => {
+                /*- Now that we didn't find a function, nor
+                    a static file, we'll send a 404 page -*/
+                not_found(&mut stream, *config);
+            },
+        };
+    }else {
+        not_found(&mut stream, *config);
     };
 }
 
@@ -395,7 +392,7 @@ impl<'f> Server {
             num_threads: 1,
             serve: None,
             not_found: None,
-            routes: Route::Stack("", &[]),
+            routes: &[],
             init_buf: None,
             origin_control: None
         }
@@ -407,7 +404,7 @@ impl<'f> Server {
     pub fn serve(&mut self, serve:&'static str) -> &mut Self         { self.serve = Some(serve); self }
     
     /// All http-routes coupled to this server
-    pub fn routes(&mut self, routes:Route) -> &mut Self              { self.routes = routes; self }
+    pub fn routes(&mut self, routes:&'static [Route]) -> &mut Self              { self.routes = routes; self }
     
     /// `[REQUIRED]` The server address
     pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }

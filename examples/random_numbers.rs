@@ -8,9 +8,9 @@ use rand::Rng;
 fn main() {
 
     /*- Initiaize routes -*/
-    let routes = Route::Stack("", &[
+    let routes = &[
         Route::Get("", respond_with_random_number),
-    ]);
+    ];
 
     /*- Initiaize server -*/
     Server::new()

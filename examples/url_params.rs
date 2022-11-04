@@ -7,13 +7,14 @@ use responder::{ *, response::Respond, stream::Stream };
 fn main() {
 
     /*- Initialize routes -*/
-    let routes = Route::Stack("", &[
+    let routes = &[
+        Route::Get("", |stream| stream.respond_status(1231)),
         Route::Stack("url_params", &[
             Route::Stack(":param_1:", &[
                 Route::Get(":some_other_param:", api_endpoint_with_url_params)
             ]),
         ])
-    ]);
+    ];
 
     /*- Initialize server -*/
     Server::new()
