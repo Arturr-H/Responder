@@ -52,6 +52,7 @@ pub enum ResponseType {
     Json,
     Html,
     Image(ImageType),
+    Custom(&'static str)
 }
 
 /// Server can also respond with images
@@ -201,6 +202,12 @@ impl Respond {
     /// Set additional headers
     pub fn headers(&mut self, headers:Vec<String>) -> Self {
         self.additional_headers = Some(headers);
+        self.clone()
+    }
+
+    /// Set response type
+    pub fn response_type(&mut self, response_type:ResponseType) -> Self {
+        self.response_type = response_type;
         self.clone()
     }
 

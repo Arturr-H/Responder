@@ -72,6 +72,7 @@ impl<'a> Stream<'a> {
                     ImageType::Svg => "image/svg+xml",
                 }
             },
+            ResponseType::Custom(custom) => &custom
         };
 
         /*- If content was provided -*/
