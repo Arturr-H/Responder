@@ -183,7 +183,7 @@ impl<'a> Stream<'a> {
     /// /*- Return if headers were not specified -*/
     /// if stream.expect_headers(&["authentification"], true) { return; };
     /// ```
-    pub fn expect_headers(&mut self, headers:&[&str], ignore_caps:bool) -> bool {
+    pub fn expect_headers(&mut self, headers:&[&str]) -> bool {
         let request_headers:Vec<&&str> = self.headers
                 .keys()
                 .collect();
