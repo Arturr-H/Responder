@@ -175,7 +175,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
             Ok(_) => return,
             Err(optional_status) => {
                 if let Some(status) = optional_status {
-                    stream.respond_status(status);
+                    return stream.respond_status(status);
                 }
             },
         };
@@ -255,12 +255,13 @@ fn call_endpoint(
                 will be set in the url. Example: localhost:8000/day/:day: -*/
             let mut params:HashMap<String, String> = HashMap::new();
 
-            /*- Push the path to the actual final path -*/
-            full_path.push_str(pathname);
+            /*- Push the pathname -*/
+            let mut possible_full_path = full_path.clone();
+            possible_full_path.push_str(pathname);
 
             /*- Check for url parameters -*/
-            let final_subpaths:Vec<&str> = get_subpaths(full_path);
-            let mut final_check_url:String = full_path.clone();
+            let final_subpaths:Vec<&str> = get_subpaths(&possible_full_path);
+            let mut final_check_url:String = possible_full_path.clone();
 
             /*- Iterate and find url params -*/
             for (index, request_path) in get_subpaths(info.path).iter().enumerate() {
@@ -306,7 +307,7 @@ fn call_endpoint(
                         /*- Call the associated function -*/
                         stream.set_params(params);
                         function_ptr(stream);
-    
+
                         /*- Return success -*/
                         Ok(())
                     },
