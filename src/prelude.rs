@@ -4,5 +4,4 @@ pub use crate::{
     Server,
     Stream,
     Respond,
-    response::with_file
 };

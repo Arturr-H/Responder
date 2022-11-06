@@ -72,38 +72,10 @@ pub enum ImageType { Jpeg, Png, Gif, Webp, Svg }
 pub fn not_found(stream:&mut Stream, config:Server) {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
-        stream.respond(404u16, with_file(page));
+        stream.respond_file(404u16, page);
     }else {
         stream.respond_status(404u16);
     }
-}
-
-/*- Respond with file -*/
-/// Will return a Respond struct containing information
-/// to send a file, like an image, text, or json file
-/// 
-/// ## Example
-/// ```
-/// respond(&mut stream, 200u16, with_file("/path/to/file.png"))
-/// ```
-pub fn with_file(path:&str) -> Respond {
-
-    /*- Grab the path -*/
-    let path = Path::new(path);
-
-    /*- Open file -*/
-    let content:String = match fs::File::open(path) {
-        Ok(mut e) => {
-            let mut content:String = String::new();
-            if e.read_to_string(&mut content).is_ok() { }
-
-            content
-        },
-        Err(_) => String::new()
-    };
-
-    /*- Return -*/
-    Respond::new().content(&content, ResponseType::guess(path))
 }
 
 /*- Method implementations -*/

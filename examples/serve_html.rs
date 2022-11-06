@@ -24,8 +24,8 @@ fn main() {
 /*- Api endpoints -*/
 fn manual_serve(stream:&mut Stream) -> () {
     /*- Respond with the html file -*/
-    stream.respond(
+    stream.respond_file(
         200u16,
-        with_file("examples/static/manual.html")
+        "examples/static/manual.html"
     );
 }

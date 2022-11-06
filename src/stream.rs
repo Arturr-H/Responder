@@ -1,5 +1,5 @@
 /*- Imports -*/
-use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash };
+use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::Path, fs::File, io::Read };
 use crate::response::{ STATUS_CODES, Respond, ResponseType, ImageType };
 
 /*- Structs, enums & unions -*/
@@ -233,6 +233,37 @@ impl<'a> Stream<'a> {
         };
 
         false
+    }
+
+    /*- Respond with file -*/
+    /// ## Example
+    /// ```
+    /// stream.respond_file(200u16, "/path/to/file.png")
+    /// ```
+    pub fn respond_file(&mut self, status:u16, path:&str) -> () {
+
+        /*- Grab the path -*/
+        let path = Path::new(path);
+
+        /*- Open file -*/
+        let content:String = match File::open(path) {
+            Ok(mut e) => {
+                let mut content:String = String::new();
+                if e.read_to_string(&mut content).is_ok() { }
+
+                content
+            },
+            Err(_) => String::new()
+        };
+
+        /*- Return -*/
+        self.respond(
+            status,
+            Respond::new().content(
+                &content,
+                ResponseType::guess(path)
+            )
+        )
     }
 }
 
