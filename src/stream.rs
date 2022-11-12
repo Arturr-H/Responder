@@ -274,7 +274,7 @@ impl<'a> Stream<'a> {
     pub fn get_cookies(&self) -> HashMap<&str, &str> {
         let mut cookies:HashMap<&str, &str> = HashMap::new();
 
-        if let Some(cookie) = self.headers.get("cookie") {
+        if let Some(cookie) = self.headers.get("Cookie") {
             for cookie in cookie.split("; ") {
                 let cookie:Vec<&str> = cookie.split("=").collect();
                 cookies.insert(match cookie.get(0) { Some(e) => e, None => continue }, match cookie.get(1) { Some(e) => e, None => continue });
