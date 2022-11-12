@@ -265,6 +265,24 @@ impl<'a> Stream<'a> {
             )
         )
     }
+
+    /*- Get cookies -*/
+    /// ## Example
+    /// ```
+    /// let cookies:HashMap<&str, &str> = stream.get_cookies();
+    /// ```
+    pub fn get_cookies(&self) -> HashMap<&str, &str> {
+        let mut cookies:HashMap<&str, &str> = HashMap::new();
+
+        if let Some(cookie) = self.headers.get("cookie") {
+            for cookie in cookie.split("; ") {
+                let cookie:Vec<&str> = cookie.split("=").collect();
+                cookies.insert(match cookie.get(0) { Some(e) => e, None => continue }, match cookie.get(1) { Some(e) => e, None => continue });
+            }
+        };
+
+        cookies
+    }
 }
 
 /*- Conversions -*/
