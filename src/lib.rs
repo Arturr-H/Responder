@@ -122,6 +122,12 @@ pub enum Route {
     Post(
         &'static str,
         fn(&mut Stream) -> ()
+    ),
+
+    /// Enpoint. File serving 
+    File(
+        &'static str,
+        &'static str
     )
 }
 
@@ -317,6 +323,18 @@ fn call_endpoint(
                 Err(None)
             }
         },
+        Route::File(endpoint_path, file_path) => {
+            /*- Push the pathname -*/
+            let mut possible_full_path = full_path.clone();
+            possible_full_path.push_str(&endpoint_path);
+
+            if &possible_full_path == &["/", *endpoint_path].concat() {
+                stream.respond_file(200u16, file_path);
+                Ok(())
+            }else {
+                Err(None)
+            }
+        }
         _ => Err(Some(405u16)) // Method not allowed
     }
 }
