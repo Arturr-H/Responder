@@ -216,7 +216,6 @@ fn call_endpoint(
         the diffrence is that ControlledStack needs origin
         control funciton to be called in the beginning -*/
     if let Route::ControlledStack(_, pathname, next_routes) | Route::Stack(pathname, next_routes) = routes {
-        println!("STACK: {pathname}");
         if let Route::ControlledStack(fnc, _, _) = routes {
             /*- If request didn't pass origin control filters, return with error code -*/
             if let Err(status) = fnc(stream) { return Err(Some(status)); };
@@ -256,8 +255,6 @@ fn call_endpoint(
     match routes {
         Route::Post(pathname, function_ptr)
        | Route::Get(pathname, function_ptr) => {
-
-        println!("PGET: {pathname}");
 
             /*- Store url parameters. An url parameter is a "variable" which
                 will be set in the url. Example: localhost:8000/day/:day: -*/
