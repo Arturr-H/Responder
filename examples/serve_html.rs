@@ -8,8 +8,8 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = &[
-        Route::Get("manual_serve", manual_serve),
         Route::File("manual_serve_file", "examples/static/manual_file.html"),
+        Route::Get("manual_serve", manual_serve),
     ];
 
     /*- Initiaize server -*/

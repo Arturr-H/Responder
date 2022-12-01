@@ -77,7 +77,6 @@ pub struct Server {
     origin_control:Option<fn(&Stream) -> Result<(), u16>>
 }
 
-#[derive(Clone, Copy)]
 /// A quick way of nesting routes inside of eachother
 /// stacks can contain either yet another stack, or an 
 /// endpoint like Get or Post. This enum is used for
@@ -217,6 +216,7 @@ fn call_endpoint(
         the diffrence is that ControlledStack needs origin
         control funciton to be called in the beginning -*/
     if let Route::ControlledStack(_, pathname, next_routes) | Route::Stack(pathname, next_routes) = routes {
+        println!("STACK: {pathname}");
         if let Route::ControlledStack(fnc, _, _) = routes {
             /*- If request didn't pass origin control filters, return with error code -*/
             if let Err(status) = fnc(stream) { return Err(Some(status)); };
@@ -256,6 +256,8 @@ fn call_endpoint(
     match routes {
         Route::Post(pathname, function_ptr)
        | Route::Get(pathname, function_ptr) => {
+
+        println!("PGET: {pathname}");
 
             /*- Store url parameters. An url parameter is a "variable" which
                 will be set in the url. Example: localhost:8000/day/:day: -*/
@@ -328,7 +330,7 @@ fn call_endpoint(
             let mut possible_full_path = full_path.clone();
             possible_full_path.push_str(&endpoint_path);
 
-            if &possible_full_path == &["/", *endpoint_path].concat() {
+            if &possible_full_path == info.path {
                 stream.respond_file(200u16, file_path);
                 Ok(())
             }else {
