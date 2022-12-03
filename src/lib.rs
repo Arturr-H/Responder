@@ -85,6 +85,9 @@ pub struct Server {
     /// If file caching should be enabled or not
     cache: Option<FileCacheType>,
 
+    /// If server logging should be enabled (Like when caching files / opening server)
+    logs: bool,
+
     /// Check origin and headers before accepting requests
     /// with this function taking headers as input. Will
     /// return a bool indicating wether the request is
@@ -447,7 +450,8 @@ impl<'f> Server {
             routes: &[],
             init_buf: None,
             origin_control: None,
-            cache: None
+            cache: None,
+            logs: true,
         }
     }
     /// `[REQUIRED]` The server port
@@ -476,6 +480,9 @@ impl<'f> Server {
 
     /// If file caching should be enabled or not (for specified file paths)
     pub fn cache_selected(&mut self, selection:&'static [&'static str]) -> &mut Self { self.cache = Some(FileCacheType::Selection(selection)); self }
+
+    /// If file caching should be enabled or not (for specified file paths)
+    pub fn no_logs(&mut self) -> &mut Self                           { self.logs = false; self }
     
     /// Check origin & headers before accepting requests
     /// with this function taking headers as input. Will
@@ -521,11 +528,12 @@ impl<'f> Server {
             match cache {
                 FileCacheType::All => {
                     load_files_cache(
+                        self.logs,
                         get_list_dir(self.serve.expect("Calling .cache_serve_dir() requires .serve(dir) to be set"))
                     )
                 },
                 FileCacheType::Selection(selection) => {
-                    load_files_cache(selection.to_owned().iter().map(|e| e.to_string()).collect::<Vec<String>>())
+                    load_files_cache(self.logs, selection.to_owned().iter().map(|e| e.to_string()).collect::<Vec<String>>())
                 }
             }
         };
@@ -539,7 +547,7 @@ impl<'f> Server {
         };
 
         /*- Log status -*/
-        println!("{}", 
+        if self.logs { println!("{}", 
             &format!(
                 "{} {}",
                 ansi_term::Color::RGB(123, 149, 250).paint(
@@ -552,7 +560,7 @@ impl<'f> Server {
                     ))
                 )    
             )
-        );
+        ) };
 
         /*- Initialize thread_handler -*/
         let thread_handler = thread_handler::MainThreadHandler::new(self.num_threads);
@@ -602,13 +610,13 @@ fn get_list_dir<'a>(dir:&str) -> Vec<String> {
 }
 
 /*- Loads all files in a dir into memory -*/
-fn load_files_cache(files:Vec<String>) {
+fn load_files_cache(logs:bool, files:Vec<String>) {
     let files_len = files.len();
     let mut index = 0;
     let mut stdout = std::io::stdout();
     for file in files {
         index += 1;
-        print!("\rLoading file: {} / {}", index, files_len);
+        if logs { print!("\rLoading file: {} / {}", index, files_len) };
         let mut file_ = match std::fs::File::open(file.clone()) {
             Ok(e) => e,
             Err(_) => continue
@@ -618,6 +626,8 @@ fn load_files_cache(files:Vec<String>) {
         FILE_CACHE.lock().unwrap().insert(Path::new(&file).canonicalize().unwrap_or(PathBuf::from("")).display().to_string(), buf);
         stdout.flush().unwrap();
     };
-    println!();
-    println!("Loaded {} files into memory", files_len);
+    if logs { 
+        println!();
+        println!("Loaded {} files into memory", files_len);
+    };
 }
