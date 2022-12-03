@@ -588,7 +588,7 @@ fn get_list_dir<'a>(dir:&str) -> Vec<String> {
     let mut files:Vec<String> = Vec::new();
 
     /*- Get all files in dir -*/
-    for entry in fs::read_dir(dir).unwrap() {
+    for entry in match fs::read_dir(dir) { Ok(e) => e, Err(_) => return files } {
         let entry = match entry {
             Ok(e) => e,
             Err(_) => continue
@@ -622,9 +622,15 @@ fn load_files_cache(logs:bool, files:Vec<String>) {
             Err(_) => continue
         };
         let mut buf = Vec::new();
-        file_.read_to_end(&mut buf).unwrap();
-        FILE_CACHE.lock().unwrap().insert(Path::new(&file).canonicalize().unwrap_or(PathBuf::from("")).display().to_string(), buf);
-        stdout.flush().unwrap();
+        match file_.read_to_end(&mut buf) {
+            Ok(e) => e,
+            Err(_) => continue
+        };
+        match FILE_CACHE.lock() {
+            Ok(e) => e,
+            Err(_) => continue
+        }.insert(Path::new(&file).canonicalize().unwrap_or(PathBuf::from("")).display().to_string(), buf);
+        stdout.flush().unwrap_or_default();
     };
     if logs { 
         println!();

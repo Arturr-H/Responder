@@ -62,7 +62,7 @@ impl MainThreadHandler {
         let task = Box::new(t);
 
         /*- Send the job down the channel -*/
-        self.sender.send(task).unwrap();
+        self.sender.send(task).unwrap_or(());
     }
 }
 impl Worker {
