@@ -49,8 +49,10 @@ pub struct Respond {
 /// Decides what the server will respond with
 pub enum ResponseType {
     Text,
+    Css,
     Json,
     Html,
+    Js,
     Image(ImageType),
     Custom(&'static str)
 }
@@ -96,6 +98,12 @@ impl ResponseType {
                     Some("json") => ResponseType::Json,
                     Some("yml")  => ResponseType::Json,
                     Some("yaml") => ResponseType::Json,
+
+                    /*- Css -*/
+                    Some("css")  => ResponseType::Css,
+
+                    /*- Js -*/
+                    Some("js")   => ResponseType::Js,
 
                     /*- Image -*/
                     Some("png")  => ResponseType::Image(ImageType::Png),

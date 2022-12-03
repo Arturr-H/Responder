@@ -60,16 +60,18 @@ impl<'a> Stream<'a> {
 
         /*- Get the response type -*/
         let mut response_type:&str = match respond.response_type {
-            ResponseType::Text => "text/plain",
             ResponseType::Json => "application/json",
+            ResponseType::Js   => "text/javascript",
+            ResponseType::Text => "text/plain",
             ResponseType::Html => "text/html",
+            ResponseType::Css  => "text/css",
             ResponseType::Image(c)  => {
                 match c {
                     ImageType::Jpeg => "image/jpeg",
-                    ImageType::Png => "image/png",
-                    ImageType::Gif => "image/gif",
+                    ImageType::Png  => "image/png",
+                    ImageType::Gif  => "image/gif",
                     ImageType::Webp => "image/webp",
-                    ImageType::Svg => "image/svg+xml",
+                    ImageType::Svg  => "image/svg+xml",
                 }
             },
             ResponseType::Custom(custom) => &custom
