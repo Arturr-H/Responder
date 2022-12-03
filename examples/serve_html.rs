@@ -17,6 +17,7 @@ fn main() {
         .routes(routes)
         .address("127.0.0.1")
         .serve("./examples/static")
+        .cache_serve_dir()
         .port(8080)
         .start()
         .unwrap();

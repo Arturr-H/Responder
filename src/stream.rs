@@ -1,6 +1,6 @@
 /*- Imports -*/
-use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::Path, fs::File, io::Read };
-use crate::response::{ STATUS_CODES, Respond, ResponseType, ImageType };
+use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::{Path, PathBuf}, fs::File, io::Read };
+use crate::{ response::{ STATUS_CODES, Respond, ResponseType, ImageType }, FILE_CACHE };
 
 /*- Structs, enums & unions -*/
 /// A simple wrapper for the TcpStream struct, which we want because
@@ -241,12 +241,25 @@ impl<'a> Stream<'a> {
     /// stream.respond_file(200u16, "/path/to/file.png")
     /// ```
     pub fn respond_file(&mut self, status:u16, path:&str) -> () {
-
         /*- Grab the path -*/
-        let path = Path::new(path);
+        let _path = Path::new(path);
+
+        /*- Find if exists in file cache -*/
+        if let Ok(fc) = FILE_CACHE.lock() {
+            match fc.get(&_path.canonicalize().unwrap_or(PathBuf::from("")).display().to_string()) {
+                Some(buf) => return self.respond(
+                    status,
+                    Respond::new().content(
+                        &String::from_utf8_lossy(&buf),
+                        ResponseType::guess(_path)
+                    )
+                ),
+                None => ()
+            }
+        };
 
         /*- Open file -*/
-        let content:String = match File::open(path) {
+        let content:String = match File::open(_path) {
             Ok(mut e) => {
                 let mut content:String = String::new();
                 if e.read_to_string(&mut content).is_ok() { }
@@ -261,7 +274,7 @@ impl<'a> Stream<'a> {
             status,
             Respond::new().content(
                 &content,
-                ResponseType::guess(path)
+                ResponseType::guess(_path)
             )
         )
     }

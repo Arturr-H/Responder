@@ -25,28 +25,41 @@ use request::info::{ RequestInfo, Method };
 use terminal_link::Link;
 pub use response::{ Respond, not_found };
 pub use stream::Stream;
+use lazy_static::lazy_static;
 use std::{
     net::{
         TcpStream,
         TcpListener
     },
     io::{
-        Read, Error,
+        Read, Error, Write,
     },
-    path::Path,
+    path::{Path, PathBuf},
     collections::HashMap,
-    fs, hash::Hash, num::ParseIntError,
+    fs, num::ParseIntError, sync::Mutex,
 };
 
 /*- Constants -*/
 const DATA_BUF_INIT:usize = 1024usize;
 const DATA_BUF_POST_INIT:usize = 65536usize;
 
+/*- Loading files will check if they're already cached -*/
+lazy_static! {
+    pub static ref FILE_CACHE:Mutex<HashMap<String, Vec<u8>>> = Mutex::new(HashMap::new());
+}
+
+/*- What files we want to cache -*/
+#[derive(Clone, Copy)]
+enum FileCacheType {
+    All,
+    Selection(&'static [&'static str]),
+}
+
+#[derive(Clone, Copy)]
 /*- Structs, enums & unions -*/
 /// The Server struct contains changeable fields
 /// which configures the server during both startup and
 /// whilst it's running.
-#[derive(Clone, Copy)]
 pub struct Server {
     /// The server address
     addr:       Option<&'static str>,
@@ -68,6 +81,9 @@ pub struct Server {
 
     /// The write buffer size when recieving requests in bytes
     init_buf:   Option<usize>,
+
+    /// If file caching should be enabled or not
+    cache: Option<FileCacheType>,
 
     /// Check origin and headers before accepting requests
     /// with this function taking headers as input. Will
@@ -367,6 +383,23 @@ fn serve_static_dir(dir:&str, request_path:&str, stream:&mut Stream) -> Result<(
     let path = &[dir, request_path].concat();
     let file_path:&Path = Path::new(path);
 
+    /*- Find if exists in file cache -*/
+    if let Ok(fc) = FILE_CACHE.lock() {
+        match fc.get(path) {
+            Some(buf) => {
+                stream.respond(
+                    200,
+                    Respond::new().content(
+                        &String::from_utf8_lossy(&buf),
+                        ResponseType::guess(file_path)
+                    )
+                );
+                return Ok(())
+            },
+            None => ()
+        }
+    };
+
     /*- Check path availability -*/
     match file_path.is_file() {
         true => (),
@@ -413,7 +446,8 @@ impl<'f> Server {
             not_found: None,
             routes: &[],
             init_buf: None,
-            origin_control: None
+            origin_control: None,
+            cache: None
         }
     }
     /// `[REQUIRED]` The server port
@@ -423,7 +457,7 @@ impl<'f> Server {
     pub fn serve(&mut self, serve:&'static str) -> &mut Self         { self.serve = Some(serve); self }
     
     /// All http-routes coupled to this server
-    pub fn routes(&mut self, routes:&'static [Route]) -> &mut Self              { self.routes = routes; self }
+    pub fn routes(&mut self, routes:&'static [Route]) -> &mut Self   { self.routes = routes; self }
     
     /// `[REQUIRED]` The server address
     pub fn address(&mut self, addr:&'static str) -> &mut Self        { self.addr = Some(addr); self }
@@ -436,6 +470,12 @@ impl<'f> Server {
     
     /// The write buffer size when recieving requests in bytes
     pub fn init_buf_size(&mut self, buf_size:usize) -> &mut Self     { self.init_buf = Some(buf_size); self }
+
+    /// If file caching should be enabled or not (for the directory specified in the serve function)
+    pub fn cache_serve_dir(&mut self) -> &mut Self                   { self.cache = Some(FileCacheType::All); self }
+
+    /// If file caching should be enabled or not (for specified file paths)
+    pub fn cache_selected(&mut self, selection:&'static [&'static str]) -> &mut Self { self.cache = Some(FileCacheType::Selection(selection)); self }
     
     /// Check origin & headers before accepting requests
     /// with this function taking headers as input. Will
@@ -475,6 +515,20 @@ impl<'f> Server {
                 None => return Err(errors::ConfigError::MissingPort)
             }
         );
+
+        /*- If cache is enabled -*/
+        if let Some(cache) = self.cache {
+            match cache {
+                FileCacheType::All => {
+                    load_files_cache(
+                        get_list_dir(self.serve.expect("Calling .cache_serve_dir() requires .serve(dir) to be set"))
+                    )
+                },
+                FileCacheType::Selection(selection) => {
+                    load_files_cache(selection.to_owned().iter().map(|e| e.to_string()).collect::<Vec<String>>())
+                }
+            }
+        };
 
         /*- Start the listener -*/
         let stream = match TcpListener::bind(bind_to) {
@@ -519,4 +573,51 @@ impl<'f> Server {
         /*- Return, even though it will never happen -*/
         Ok(())
     }
+}
+
+/*- Gets all files in a dir using std::fs -*/
+fn get_list_dir<'a>(dir:&str) -> Vec<String> {
+    let mut files:Vec<String> = Vec::new();
+
+    /*- Get all files in dir -*/
+    for entry in fs::read_dir(dir).unwrap() {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(_) => continue
+        };
+        let path = entry.path();
+
+        /*- If path is a file -*/
+        if path.is_file() {
+            files.push(
+                match path.to_str() {
+                    Some(e) => e.to_string(),
+                    None => continue
+                }
+            );
+        };
+    };
+
+    files
+}
+
+/*- Loads all files in a dir into memory -*/
+fn load_files_cache(files:Vec<String>) {
+    let files_len = files.len();
+    let mut index = 0;
+    let mut stdout = std::io::stdout();
+    for file in files {
+        index += 1;
+        print!("\rLoading file: {} / {}", index, files_len);
+        let mut file_ = match std::fs::File::open(file.clone()) {
+            Ok(e) => e,
+            Err(_) => continue
+        };
+        let mut buf = Vec::new();
+        file_.read_to_end(&mut buf).unwrap();
+        FILE_CACHE.lock().unwrap().insert(Path::new(&file).canonicalize().unwrap_or(PathBuf::from("")).display().to_string(), buf);
+        stdout.flush().unwrap();
+    };
+    println!();
+    println!("Loaded {} files into memory", files_len);
 }
