@@ -76,7 +76,7 @@ impl<'a> Stream<'a> {
             },
             ResponseType::Custom(custom) => &custom
         };
-
+        let cors = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\n";
         /*- If content was provided -*/
         if let Some(content) = respond.content {
             /*- Grab additional headers -*/
@@ -88,7 +88,7 @@ impl<'a> Stream<'a> {
             /*- Write the status & content to the stream -*/
             if self.stream_inner.write(
                 format!(
-                    "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{}\r\n{}",
+                    "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{cors}{}\r\n{}",
                     status, content.len(), response_type, additional_headers, content
                 ).as_bytes()
             ).is_ok() { };
@@ -96,7 +96,7 @@ impl<'a> Stream<'a> {
             /*- Write the status to the stream -*/
             if self.stream_inner.write(
                 format!(
-                    "HTTP/1.1 {}\r\n\r\n{} {}",
+                    "HTTP/1.1 {}\r\n{cors}\r\n{} {}",
                     status, status, status_msg
                 ).as_bytes()
             ).is_ok() { };

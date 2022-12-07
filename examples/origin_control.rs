@@ -1,43 +1,15 @@
-// Go to localhost:8080
 
-/*- Imports -*/
 use responder::prelude::*;
+const STR:&'static str = r#"{"wloc__.buf": "59°14'58.34''N, 17°51'20.00''E"}"#;
 
-/*- Initialize -*/
-fn main() {
-
-    /*- Initiaize routes -*/
+fn main() -> () {
     let routes = &[
-        Route::ControlledStack(origin_control_function, "", &[
-            Route::Get("", test)
-        ])
+        Route::Get("", index)
     ];
 
-    /*- Initiaize server -*/
-    Server::new()
-        .routes(routes)
-        .address("127.0.0.1")
-        .origin_control(origin_control_function)
-        .port(8080)
-        .start()
-        .unwrap();
+    Server::new().address("0.0.0.0").port(8080).routes(routes).start().unwrap();
+}
+fn index(stream:&mut Stream) -> () {
+    stream.respond(200, Respond::new().json(STR))
 }
 
-fn test(stream:&mut Stream) -> () {
-    stream.respond(200u16, Respond::new().text("Hello, world!"));
-}
-
-fn origin_control_function(stream:&Stream) -> Result<(), u16> {
-    match stream.headers.get("Host") {
-        Some(host) => {
-            if host == &"" {
-                Err(401)
-            }else {
-                Ok(())
-            }
-        },
-        None => {
-            Err(401)
-        }
-    }
-}
