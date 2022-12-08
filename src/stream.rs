@@ -3,7 +3,7 @@ use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::{P
 use crate::{ response::{ STATUS_CODES, Respond, ResponseType, ImageType }, FILE_CACHE };
 
 /*- TEMP Cors -*/
-const CORS:&'static str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, Authorization, token, X-Requested-With, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\r\nAccess-Control-Max-Age: 86400";
+const CORS:&'static str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, Authorization, token, X-Requested-With, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\r\nAccess-Control-Max-Age: 86400\r\n";
 
 /*- Structs, enums & unions -*/
 /// A simple wrapper for the TcpStream struct, which we want because
