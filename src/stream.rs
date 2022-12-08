@@ -2,6 +2,9 @@
 use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::{Path, PathBuf}, fs::File, io::Read };
 use crate::{ response::{ STATUS_CODES, Respond, ResponseType, ImageType }, FILE_CACHE };
 
+/*- TEMP Cors -*/
+const CORS:&'static str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, Authorization, token, X-Requested-With, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\r\nAccess-Control-Max-Age: 86400";
+
 /*- Structs, enums & unions -*/
 /// A simple wrapper for the TcpStream struct, which we want because
 /// it eliminates the need of importing more libs from std. This will
@@ -25,7 +28,10 @@ pub struct Stream<'lf> {
     pub params: HashMap<String, String>,
 
     /// Header keys and values which will specified in fetch requests
-    pub headers: HashMap<&'lf str, &'lf str>
+    pub headers: HashMap<&'lf str, &'lf str>,
+
+    /// Cors
+    cors: bool
 }
 
 /*- Method implementations -*/
@@ -76,7 +82,9 @@ impl<'a> Stream<'a> {
             },
             ResponseType::Custom(custom) => &custom
         };
-        let cors = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\n";
+
+        let cors = if self.cors { CORS } else { "" };
+
         /*- If content was provided -*/
         if let Some(content) = respond.content {
             /*- Grab additional headers -*/
@@ -119,7 +127,7 @@ impl<'a> Stream<'a> {
 
         /*- Get the status string -*/
         let status_msg = STATUS_CODES.iter().find(|&x| x.0 == &status).unwrap_or(&(&status, "Internal error - Missing status code")).1;
-        let cors = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: *\r\nAccess-Control-Allow-Methods: *\r\n";
+        let cors = if self.cors { CORS } else { "" };
 
         /*- Get the response type -*/
         let mut response_type:&str = "text/plain";
@@ -307,6 +315,7 @@ impl<'a> From<TcpStream> for Stream<'a> {
     /// Convert TcpStream into Stream struct.
     fn from(stream_inner: TcpStream) -> Self {
         Self {
+            cors: true,
             stream_inner,
             buf_written_to: false,
             body: String::new(),

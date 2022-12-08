@@ -88,6 +88,9 @@ pub struct Server {
     /// If server logging should be enabled (Like when caching files / opening server)
     logs: bool,
 
+    /// If CORS should be enabled or not
+    cors: bool,
+
     /// Check origin and headers before accepting requests
     /// with this function taking headers as input. Will
     /// return a bool indicating wether the request is
@@ -452,6 +455,7 @@ impl<'f> Server {
             origin_control: None,
             cache: None,
             logs: true,
+            cors: false
         }
     }
     /// `[REQUIRED]` The server port
@@ -483,6 +487,9 @@ impl<'f> Server {
 
     /// If file caching should be enabled or not (for specified file paths)
     pub fn no_logs(&mut self) -> &mut Self                           { self.logs = false; self }
+
+    /// If CORS should be enabled or not
+    pub fn cors(&mut self) -> &mut Self                              { self.cors = true; self }
     
     /// Check origin & headers before accepting requests
     /// with this function taking headers as input. Will
