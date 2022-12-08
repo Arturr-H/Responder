@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "responder"
-version = "0.1.92"
+version = "0.1.93"
 dependencies = [
  "ansi_term",
  "lazy_static",
