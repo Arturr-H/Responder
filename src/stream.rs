@@ -3,7 +3,7 @@ use std::{ net::TcpStream, io::Write, collections::HashMap, hash::Hash, path::{P
 use crate::{ response::{ STATUS_CODES, Respond, ResponseType, ImageType }, FILE_CACHE };
 
 /*- TEMP Cors -*/
-const CORS:&'static str = "Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, Authorization, token, X-Requested-With, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\r\nAccess-Control-Max-Age: 86400\r\n";
+const CORS:&'static str = "\r\nAccess-Control-Allow-Origin: *\r\nAccess-Control-Allow-Headers: Content-Type, Authorization, token, X-Requested-With, Origin, Accept, Access-Control-Request-Method, Access-Control-Request-Headers\r\nAccess-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, HEAD\r\nAccess-Control-Max-Age: 86400";
 
 /*- Structs, enums & unions -*/
 /// A simple wrapper for the TcpStream struct, which we want because
@@ -82,7 +82,6 @@ impl<'a> Stream<'a> {
             },
             ResponseType::Custom(custom) => &custom
         };
-
         let cors = if self.cors { CORS } else { "" };
 
         /*- If content was provided -*/
@@ -96,15 +95,15 @@ impl<'a> Stream<'a> {
             /*- Write the status & content to the stream -*/
             if self.stream_inner.write(
                 format!(
-                    "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}\r\n{cors}{}\r\n\r\n{}",
-                    status, content.len(), response_type, additional_headers, content
+                    "HTTP/1.1 {}\r\nContent-Length: {}\r\nContent-Type: {}{additional_headers}{cors}\r\n\r\n{content}",
+                    status, content.len(), response_type
                 ).as_bytes()
             ).is_ok() { };
         }else {
             /*- Write the status to the stream -*/
             if self.stream_inner.write(
                 format!(
-                    "HTTP/1.1 {}\r\n{cors}\r\n{} {}",
+                    "HTTP/1.1 {}{cors}\r\n\r\n{} {}",
                     status, status, status_msg
                 ).as_bytes()
             ).is_ok() { };
@@ -135,7 +134,7 @@ impl<'a> Stream<'a> {
         /*- Write the status to the stream -*/
         if self.stream_inner.write(
             format!(
-                "HTTP/1.1 {}\r\n{cors}\r\n{} {}",
+                "HTTP/1.1 {}{cors}\r\n\r\n{} {}",
                 status, status, status_msg
             ).as_bytes()
         ).is_ok() { };

@@ -338,7 +338,15 @@ fn call_endpoint(
                         /*- Return success -*/
                         Ok(())
                     },
-                    _ => Err(Some(405u16)) // Method not allowed
+                    Method::UNKNOWN => Err(Some(405u16)), // Method not allowed
+                    _ => {
+                        /*- Call the associated function -*/
+                        stream.set_params(params);
+                        function_ptr(stream);
+
+                        /*- Return success -*/
+                        Ok(())
+                    }
                 }
             }else {
                 Err(None)
@@ -348,7 +356,6 @@ fn call_endpoint(
             /*- Push the pathname -*/
             let mut possible_full_path = full_path.clone();
             possible_full_path.push_str(&endpoint_path);
-
             if &possible_full_path == info.path {
                 stream.respond_file(200u16, file_path);
                 Ok(())
