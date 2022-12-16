@@ -165,7 +165,10 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     };
 
     /*- Parse headers (via utils) -*/
-    let mut request:String = String::from_utf8_lossy(buffer).to_string();
+    let mut request:String = String::from_utf8_lossy(
+        // Remove empty bytes
+        &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
+    ).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
 
     /*- Check if we should allow origin or not -*/
@@ -339,6 +342,10 @@ fn call_endpoint(
                         Ok(())
                     },
                     Method::UNKNOWN => Err(Some(405u16)), // Method not allowed
+                    Method::OPTIONS => {
+                        stream.respond_status(200u16);
+                        Ok(())
+                    },
                     _ => {
                         /*- Call the associated function -*/
                         stream.set_params(params);
