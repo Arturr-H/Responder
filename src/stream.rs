@@ -153,6 +153,16 @@ impl<'a> Stream<'a> {
         self.respond(200, Respond::new().json(&payload.to_string()));
     }
 
+    /// Respond with JSON payload status
+    /// ## Example
+    /// ```
+    /// /* Repond with payload status (real http status will be 200) */
+    /// stream.payload_status(200);
+    /// ```
+    pub fn payload_status(&mut self, status:u16) {
+        self.payload(format!("{{\"status\":{}}}", status));
+    }
+
     /// Get a mutable reference of the inner stream because
     /// the stream_inner key isn't exposed publicly.
     /// 
