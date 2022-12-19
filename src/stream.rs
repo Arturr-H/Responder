@@ -143,6 +143,16 @@ impl<'a> Stream<'a> {
         self.stream_inner.flush().ok();
     }
 
+    /// Respond with JSON payload
+    /// ## Example
+    /// ```
+    /// /* Repond with some JSON values using the json!() macro from the `serde_json` crate */
+    /// stream.payload(json!({"key":"value"}));
+    /// ```
+    pub fn payload(&mut self, payload:impl ToString) {
+        self.respond(200, Respond::new().json(&payload.to_string()));
+    }
+
     /// Get a mutable reference of the inner stream because
     /// the stream_inner key isn't exposed publicly.
     /// 
