@@ -195,7 +195,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
         body = request.split("\r\n\r\n").last().unwrap_or("").to_string();
         // TODO
     }
-    let mut full_path:String = String::from("/");
+    let mut full_path:String = String::new();
     stream.set_body(body);
     stream.set_headers(headers);
 
@@ -321,7 +321,7 @@ fn call_endpoint(
             }
 
             /*- If it's the requested path -*/
-            if final_check_url == info.path {
+            if trim(final_check_url) == trim(info.path.to_string()) {
 
                 /*- If it's the requested method -*/
                 match &info.method {
@@ -372,6 +372,15 @@ fn call_endpoint(
         }
         _ => Err(Some(405u16)) // Method not allowed
     }
+}
+
+/*- Trim paths with trailing slashes -*/
+pub fn trim(input:String) -> String {
+    let mut output = input.clone();
+    if output.ends_with('/') {
+        output.pop();
+    }
+    output
 }
 
 /*- Get subpaths of a full path. Example: get_subpaths("/Path/to/value") -> vec!["Path", "to", "value"] -*/
