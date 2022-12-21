@@ -321,6 +321,7 @@ fn call_endpoint(
                 }
             }
 
+            println!("{} {}", trim(final_check_url.clone()), trim(info.path.to_string()));
             /*- If it's the requested path -*/
             if trim(final_check_url) == trim(info.path.to_string()) {
 
@@ -375,12 +376,11 @@ fn call_endpoint(
     }
 }
 
-/*- Trim paths with trailing slashes -*/
+/*- Trim paths with trailing and leading slashes -*/
 pub fn trim(input:String) -> String {
     let mut output = input.clone();
-    if output.ends_with('/') {
-        output.pop();
-    }
+    if output.ends_with('/') { output.pop(); };
+    if output.starts_with('/') { output.remove(0); };
     output
 }
 
