@@ -1,6 +1,6 @@
 [package]
 name = "responder"
-version = "0.1.985"
+version = "0.1.986"
 edition = "2021"
 description = "Quickly create API:s using this simple and lightweight framework."
 

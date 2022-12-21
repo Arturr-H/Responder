@@ -8,9 +8,8 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = &[
-        Route::Stack("", &[
-            Route::Get("hej", test),
-            Route::Get("", test),
+        Route::ControlledStack(origin_control_function, "", &[
+            Route::Get("", test)
         ])
     ];
 
@@ -18,8 +17,8 @@ fn main() {
     Server::new()
         .routes(routes)
         .address("127.0.0.1")
-        // .origin_control(origin_control_function)
-        .port(8082)
+        .origin_control(origin_control_function)
+        .port(8080)
         .start()
         .unwrap();
 }

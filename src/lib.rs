@@ -3,10 +3,10 @@
 
 /*- Global allowings -*/
 #![allow(
-    unused_imports,
-    unused_mut,
     dead_code,
-    unused_variables
+    unused_imports,
+    unused_variables,
+    unused_mut
 )]
 
 /*- Module imports -*/
@@ -32,15 +32,15 @@ use std::{
         TcpListener
     },
     io::{
-        Read, Error, Write,
+        Read, Write,
     },
     path::{Path, PathBuf},
     collections::HashMap,
-    fs, num::ParseIntError, sync::Mutex,
+    fs, sync::Mutex,
 };
 
 /*- Constants -*/
-const DATA_BUF_INIT:usize = 1024usize;
+const _DATA_BUF_INIT:usize = 1024usize;
 const DATA_BUF_POST_INIT:usize = 65536usize;
 
 /*- Loading files will check if they're already cached -*/
@@ -165,9 +165,10 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     };
 
     /*- Parse headers (via utils) -*/
-    let mut request:String = String::from_utf8_lossy(
+    let request:String = String::from_utf8_lossy(
         // Remove empty bytes
-        &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
+        // &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
+        &buffer[..]
     ).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
 
