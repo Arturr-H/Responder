@@ -31,7 +31,7 @@ pub struct Stream<'lf> {
     pub headers: HashMap<&'lf str, &'lf str>,
 
     /// Cors
-    cors: bool
+    pub cors: bool
 }
 
 /*- Method implementations -*/
@@ -334,7 +334,7 @@ impl<'a> From<TcpStream> for Stream<'a> {
     /// Convert TcpStream into Stream struct.
     fn from(stream_inner: TcpStream) -> Self {
         Self {
-            cors: true,
+            cors: false,
             stream_inner,
             buf_written_to: false,
             body: String::new(),

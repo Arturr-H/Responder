@@ -158,6 +158,11 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     let buffer:&mut Vec<u8> = &mut vec![0u8; config.init_buf.unwrap_or(DATA_BUF_POST_INIT)];
     let mut stream = Stream::from(tcp_stream);
 
+    /*- Set CORS -*/
+    if config.cors {
+        stream.cors = true;
+    };
+
     /*- Read data into buffer -*/
     match stream.get_mut_inner_ref().read(buffer) {
         Ok(data) => data,
@@ -321,7 +326,6 @@ fn call_endpoint(
                 }
             }
 
-            println!("{} {}", trim(final_check_url.clone()), trim(info.path.to_string()));
             /*- If it's the requested path -*/
             if trim(final_check_url) == trim(info.path.to_string()) {
 
