@@ -349,10 +349,15 @@ fn call_endpoint(
             }
         },
         Route::File(endpoint_path, file_path) => {
+            println!("{endpoint_path} {file_path}");
             /*- Push the pathname -*/
             let mut possible_full_path = full_path.clone();
             possible_full_path.push_str(&endpoint_path);
-            if &possible_full_path == info.path {
+
+            dbg!(&possible_full_path);
+            dbg!(info.path);
+
+            if trim(possible_full_path) == trim(info.path.to_string()) {
                 stream.respond_file(200u16, file_path);
                 Ok(())
             }else {

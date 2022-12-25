@@ -1,4 +1,4 @@
-// Go to localhost:8080/index.html or localhost:8080/manual_serve to see the result
+// Go to localhost:8080/index.html, localhost:8080/manual_serve_file or localhost:8080/manual_serve to see the result
 
 /*- Imports -*/
 use responder::prelude::*;
@@ -8,7 +8,7 @@ fn main() {
 
     /*- Initiaize routes -*/
     let routes = &[
-        Route::File("manual_serve_file", "examples/static/manual_file.html"),
+        Route::File("manual_serve_file", "./examples/static/manual_serve_file.html"),
         Route::Get("manual_serve", manual_serve),
     ];
 
@@ -28,6 +28,6 @@ fn manual_serve(stream:&mut Stream) -> () {
     /*- Respond with the html file -*/
     stream.respond_file(
         200u16,
-        "examples/static/manual.html"
+        "examples/static/manual_serve.html"
     );
 }
