@@ -89,13 +89,6 @@ pub struct Server {
 
     /// If CORS should be enabled or not
     cors: bool,
-
-    /// Check origin and headers before accepting requests
-    /// with this function taking headers as input. Will
-    /// return a bool indicating wether the request is
-    /// valid or not. If it isn't responding will be handled
-    /// in the origin control function.
-    origin_control:Option<fn(&Stream) -> Result<(), u16>>
 }
 
 /// A quick way of nesting routes inside of eachother
@@ -124,10 +117,10 @@ pub enum Route {
     ),
 
     /// A stack with all it's routes protected by an origin control function.
-    /// The origin control function returns a result which contains status code
-    /// if request was not accepted
+    /// The origin control function returns a boolean indicating wether the
+    /// request is valid or not. (true = continue the request. false = cancel)
     ControlledStack(
-        fn(&Stream) -> Result<(), u16>,
+        fn(&mut Stream) -> bool,
         &'static str,
         &'static [Route]
     ),
@@ -174,16 +167,6 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
         &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
     ).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
-
-    /*- Check if we should allow origin or not -*/
-    match config.origin_control {
-        Some(origin_control) => {
-            if origin_control(&mut stream).is_ok() {
-                return
-            };
-        },
-        None => (),
-    };
 
     /*- Get request info -*/
     let mut body:String = String::new();
@@ -246,8 +229,10 @@ fn call_endpoint(
         control funciton to be called in the beginning -*/
     if let Route::ControlledStack(_, pathname, next_routes) | Route::Stack(pathname, next_routes) = routes {
         if let Route::ControlledStack(fnc, _, _) = routes {
-            /*- If request didn't pass origin control filters, return with error code -*/
-            if let Err(status) = fnc(stream) { return Err(Some(status)); };
+            /*- If request didn't pass origin control filters,
+                return with no error code because response
+                are handled in origin control function -*/
+            if fnc(stream) == false { return Err(None); };
         }
             
         /*- If a tail was found -*/
@@ -478,7 +463,6 @@ impl<'f> Server {
             not_found: None,
             routes: &[],
             init_buf: None,
-            origin_control: None,
             cache: None,
             logs: true,
             cors: false
@@ -516,13 +500,6 @@ impl<'f> Server {
 
     /// If CORS should be enabled or not
     pub fn cors(&mut self) -> &mut Self                              { self.cors = true; self }
-    
-    /// Check origin & headers before accepting requests
-    /// with this function taking headers as input. Will
-    /// return a bool indicating wether the request is
-    /// valid or not. If it isn't responding will be handled
-    /// in the origin control function.
-    pub fn origin_control(&mut self, origin_control:fn(&Stream) -> Result<(), u16>) -> &mut Self  { self.origin_control = Some(origin_control); self }
     
     /*- Starting server might fail so return Err(()) if so -*/
     /// Start the server using this function. It takes a 'Server'
