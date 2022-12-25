@@ -1,6 +1,6 @@
 [package]
 name = "responder"
-version = "0.1.988"
+version = "0.1.989"
 edition = "2021"
 description = "Quickly create API:s using this simple and lightweight framework."
 
@@ -12,8 +12,6 @@ keywords = ["web", "framework"]
 categories = ["web-programming"]
 
 [dependencies]
-terminal-link = "0.1.0"
-ansi_term = "0.12.1"
 lazy_static = "1.4.0"
 
 [dev-dependencies]

@@ -22,7 +22,6 @@ pub mod prelude;
 use crate::response::ResponseType;
 use errors::ConfigError;
 use request::info::{ RequestInfo, Method };
-use terminal_link::Link;
 pub use response::{ Respond, not_found };
 pub use stream::Stream;
 use lazy_static::lazy_static;
@@ -172,8 +171,7 @@ fn handle_req(tcp_stream:TcpStream, config:&Server) {
     /*- Parse headers (via utils) -*/
     let request:String = String::from_utf8_lossy(
         // Remove empty bytes
-        // &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
-        &buffer[..]
+        &buffer[..buffer.iter().position(|&r| r == 0).unwrap_or(buffer.len())]
     ).to_string();
     let headers:HashMap<&str, &str> = utils::headers::parse_headers(&request);
 
@@ -582,20 +580,7 @@ impl<'f> Server {
         };
 
         /*- Log status -*/
-        if self.logs { println!("{}", 
-            &format!(
-                "{} {}",
-                ansi_term::Color::RGB(123, 149, 250).paint(
-                    "Server opened on"
-                ),
-                ansi_term::Color::RGB(255, 255, 0).underline().paint(
-                    format!("{}", Link::new(
-                        &format!("http://{}", &bind_to),
-                        bind_to,
-                    ))
-                )    
-            )
-        ) };
+        if self.logs { println!("http://{bind_to}") };
 
         /*- Initialize thread_handler -*/
         let thread_handler = thread_handler::MainThreadHandler::new(self.num_threads);
