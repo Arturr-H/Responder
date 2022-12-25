@@ -66,13 +66,13 @@ pub struct Server {
     /// The server port
     port:       Option<u16>,
 
-    /// The number of threads the current server will use as a maximum
+    /// The maximum number of threads the current server will use.
     num_threads:u16,
 
-    /// Serve static files from a directory
+    /// Serve static files from a directory (nested directories too)
     serve:      Option<&'static str>,
 
-    /// Path to a 404 page, if not specified server will return "404 Not Found"
+    /// Path to a 404 page, if not specified server will return "404 Not Found" if endpoint wasn't found
     not_found:  Option<&'static str>,
 
     /// All http-routes coupled to this server
@@ -101,11 +101,14 @@ pub struct Server {
 /// /*- Initiaize routes -*/
 /// let routes = &[
 ///     Route::Stack("nest1", &[
-///         Route::Post("value", |_| {}),
+///         Route::Post("value", |stream| {}),
 ///         Route::Stack("nest2", &[
-///             Route::Get("value1", |_| {}),
-///             Route::Get("value2", |_| {}),
+///             Route::Get("value1", |stream| {}),
+///             Route::Get("value2", |stream| {}),
 ///         ]),
+///         Route::ControlledStack(origin_control, "admin", &[
+///             Route::Get("self-destruct", |stream| {})
+///         ])
 ///     ]),
 /// ];
 /// ```
@@ -125,19 +128,19 @@ pub enum Route {
         &'static [Route]
     ),
 
-    /// Enpoint. Get request
+    /// Enpoint - Get request
     Get(
         &'static str,
         fn(&mut Stream) -> ()
     ),
 
-    /// Enpoint. Post request
+    /// Enpoint - Post request
     Post(
         &'static str,
         fn(&mut Stream) -> ()
     ),
 
-    /// Enpoint. File serving 
+    /// Enpoint - File serving 
     File(
         &'static str,
         &'static str

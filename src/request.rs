@@ -15,7 +15,7 @@ pub mod info {
 
     /*- Structs, enums & unions -*/
     /// A struct containing valuable information about a
-    /// http-request, like the method, path and version
+    /// http-request, like the method, path and http-version
     #[derive(Clone, Copy)]
     pub struct RequestInfo<'lf> {
         /// The http-method

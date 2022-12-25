@@ -37,8 +37,15 @@ pub const STATUS_CODES:&[(&u16, &str); 58] = &[
 
 /*- Structs, enums & unions -*/
 #[derive(Clone, Debug)]
-/// The respond function takes an optional Respond struct
-/// as input, which will contain a content type and content
+/// The respond struct will mostly be constructed by using the builder
+/// pattern. Often found in the stream.respond(_, _); function. Takes
+/// `response type`, `content` and `additional_headers` as fields.
+/// 
+/// ## Examples
+/// ```
+/// let text_response = Respond::new().text("Hello, world!");
+/// let json_response = Respond::new().json("{{\"key\": \"value\"}}");
+/// ```
 pub struct Respond {
     pub response_type:ResponseType,
     pub content:      Option<String>,
@@ -46,7 +53,7 @@ pub struct Respond {
 }
 
 #[derive(Clone, Copy, Debug)]
-/// Decides what the server will respond with
+/// What data type the server will respond with
 pub enum ResponseType {
     Text,
     Css,
@@ -57,14 +64,14 @@ pub enum ResponseType {
     Custom(&'static str)
 }
 
-/// Server can also respond with images
+/// What type of image server will respond with
 #[derive(Clone, Copy, Debug)]
 pub enum ImageType { Jpeg, Png, Gif, Webp, Svg }
 
 /*- Functions -*/
 /*- Send 404 page -*/
-/// Quickly repond with a 404 page, will firstly check
-/// if config.not_found exists, and grab 404 page path
+/// Respond with a 404 page, will firstly check
+/// if `config.not_found` exists, and grab 404 page path
 /// from there, else it will just send 404 as a status code
 /// 
 /// ## Example
@@ -129,11 +136,11 @@ impl Respond {
         Respond { response_type: ResponseType::Text, content: None, additional_headers: None }
     }
 
-    /// Respond with text
+    /// Construct a `Respond` struct with text
     /// 
     /// ## Examples
     /// ```
-    /// stream.text("Hello world!");
+    /// Respond::new().text("Hello, world!");
     /// ```
     pub fn text(&mut self, with:&str) -> Self {
         if self.content.is_none() {
@@ -145,11 +152,11 @@ impl Respond {
         }
     }
 
-    /// Respond with json
+    /// Construct a `Respond` struct with json
     /// 
     /// ## Examples
     /// ```
-    /// stream.json("\{\"hello\":\"world!\"\}");
+    /// Respond::new().json("{{\"hello\":\"world!\"}}");
     /// ```
     /// 
     pub fn json(&mut self, with:&str) -> Self {
@@ -162,11 +169,11 @@ impl Respond {
         }
     }
 
-    /// Respond with html
+    /// Construct a `Respond` struct with html
     /// 
     /// ## Examples
     /// ```
-    /// stream.html("<html><body><h1>Hello!</h1></body></html>");
+    /// Respond::new().html("<html><body><h1>Hello!</h1></body></html>");
     /// ```
     /// 
     pub fn html(&mut self, with:&str) -> Self {
@@ -196,7 +203,7 @@ impl Respond {
     /// 
     /// ## Examples
     /// ```
-    /// stream.content("<html><body><h1>Hello!</h1></body></html>", ResponseType::Html);
+    /// Respond::new().content("<html><body><h1>Hello!</h1></body></html>", ResponseType::Html);
     /// ```
     /// 
     pub fn content(&mut self, with:&str, response_type:ResponseType) -> Self {
