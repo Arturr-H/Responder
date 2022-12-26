@@ -1,18 +1,21 @@
-## Responder
+# Responder
 
-Easy to use, easy to set up. Here's an example of a simple web-server
+Easy to use, easy to set up. Here's an example of a simple web-server:
 ```rust
 use responder::prelude::*;
 
 fn main() {
 
     /*- Initiaize routes -*/
-    let routes = Route::Stack("", &[
+    let routes = &[
         Route::Stack("path", &[
-            Route::Get("enpoint", endpoint),
-            Route::Get("enpoint2", some_other_endpoint),
+            Route::Get("endpoint", endpoint),
+
+            Route::Stack("subpath", &[
+                // ...
+            ]),
         ]),
-    ]);
+    ];
 
     /*- Initiaize server -*/
     Server::new()
@@ -29,13 +32,18 @@ fn main() {
 
     // Go to 'localhost:8080/path/enpoint' to see results
 }
+
+/* Will respond with the http-status code 200 */
+fn endpoint(stream:&mut Stream) -> () {
+    stream.respond_status(200);
+}
 ```
 
 Simple, isn't it? *Now where and how do I handle all my requests?*
 <br /><br />
 The `Stream` and `Respond` structs help you manage incoming requests as well as providing you many options for building http-responses.
-<br /><br />
-### ---> `Stream`
+<br />
+### › Stream 🌊
 The `Stream` struct is passed as a parameter to every endpoint-function. It contains valuable information, together with salient methods for your needs. Here's an exaple of an endpoint function utilizing the features of the `Stream` struct:
 
 ```rust
@@ -43,9 +51,40 @@ The `Stream` struct is passed as a parameter to every endpoint-function. It cont
 fn endpoint(stream:&mut Stream) -> () {
     stream.respond_status(200);
 }
+
+/* Will respond with secret JSON data if request */
+fn endpoint_2(stream:&mut Stream) -> () {
+    /* Request data */
+    let headers    = &stream.headers;
+    let cookies    = &stream.get_cookies();
+    let url_params = &stream.params;
+    let body       = &stream.body;
+
+    /* Check if request header "pin_code" is correct */
+    if let Some(pin_code) = headers.get("pin_code") {
+        if pin_code != &"12345" {
+            /* Unauthorized (Invalid pin-code) */
+            return stream.respond_status(401)
+        };
+    }else {
+        /* Bad request (missing header) */
+        return stream.respond_status(40) 
+    }
+
+    /* Respond */
+    stream.respond(
+        200,
+        Respond::new()
+            /* TIP: use the json!() macro from the
+                `serde_json` crate instead of strings */
+            .json("{{\"secret-password\": \"password123\"}}")
+    );
+}
 ```
 
-### ---> `Respond`
+It's wrapped around the `TcpStream` struct from `std::net`. Therefore there are many more ways of handling requests. The `TcpStream` can be aquired by calling `stream.get_mut_inner_ref()`.
+
+### › Respond 🌍
 The `Respond` struct is used to construct HTTP responses. It's mostly constructed using the "*builder pattern*". Here's one example of how it could be used:
 
 ```rust
@@ -92,3 +131,6 @@ fn origin_control_function(stream:&mut Stream) -> bool {
 }
 ```
 
+## Contribution 🛠️
+I'm only 16 years old, and I do not have a lot of knowledge regarding backend security / making projects in general. Therefore contributions and feedback would be very helpful and appreciated!<br /><br />
+There are many ways to contribute, either make a push request, create an issue, mail me some things to do / feedback (`artur.h.0427@gmail.com`), or use the crate in your own projects!

@@ -8,13 +8,10 @@ fn main() {
 
     /*- Initialize routes -*/
     let routes = &[
-        Route::Get("", |s| s.respond_status(600)),
         Route::Stack("url_params", &[
 
             /*- Url params begin and end with ':', you can put them in all types of Routes -*/
-            Route::Stack(":param_1:", &[
-                Route::Get(":some_other_param:", api_endpoint_with_url_params)
-            ]),
+            Route::Get(":param_1:/:some_other_param:", api_endpoint_with_url_params)
         ])
     ];
 
