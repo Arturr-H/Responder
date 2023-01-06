@@ -5,10 +5,12 @@ use responder::prelude::*;
 
 /*- Initialize -*/
 fn main() {
-
     /*- Initiaize routes -*/
     let routes = &[
-        Route::File("manual_serve_file", "./examples/static/manual_serve_file.html"),
+        Route::File(
+            "manual_serve_file",
+            "./examples/static/manual_serve_file.html",
+        ),
         Route::Get("manual_serve", manual_serve),
     ];
 
@@ -24,10 +26,7 @@ fn main() {
 }
 
 /*- Api endpoints -*/
-fn manual_serve(stream:&mut Stream) -> () {
+fn manual_serve(stream: &mut Stream) -> () {
     /*- Respond with the html file -*/
-    stream.respond_file(
-        200u16,
-        "examples/static/manual_serve.html"
-    );
+    stream.respond_file(200u16, "examples/static/manual_serve.html");
 }

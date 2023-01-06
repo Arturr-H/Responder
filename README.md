@@ -1,3 +1,8 @@
+<img src="https://img.shields.io/github/repo-size/Arturr-H/Responder">
+<img src="https://img.shields.io/crates/v/Responder">
+<img src="https://img.shields.io/crates/d/Responder">
+<img src="https://img.shields.io/crates/l/Responder">
+
 # Responder
 
 Easy to use, easy to set up. Here's an example of a simple web-server:
