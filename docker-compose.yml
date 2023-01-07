@@ -1,12 +1,7 @@
-version: "3.9"
-
+version: '3'
 services:
-  responder:
-    build:
-      context: .
-      dockerfile: main.Dockerfile
-
-    container_name: "responder"
-
-    ports:
-      - "8081:8081"
+    test-server:
+        build: .
+        image: test-server
+        ports:
+            - "6102:6102"

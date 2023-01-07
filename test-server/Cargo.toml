@@ -1,0 +1,12 @@
+[package]
+name = "test-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+## Import the parent directory
+responder = { path = "../" }
+
+[[bin]]
+name = "my-project"
+path = "src/main.rs"
