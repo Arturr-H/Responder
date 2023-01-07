@@ -1,7 +1,11 @@
-<img src="https://img.shields.io/github/repo-size/Arturr-H/Responder">
-<img src="https://img.shields.io/crates/v/Responder">
-<img src="https://img.shields.io/crates/d/Responder">
-<img src="https://img.shields.io/crates/l/Responder">
+<p align="center" style="width:100%">
+    <img src="https://img.shields.io/github/repo-size/Arturr-H/Responder">
+    <img src="https://img.shields.io/crates/v/Responder">
+    <img src="https://img.shields.io/crates/d/Responder">
+    <img src="https://img.shields.io/crates/l/Responder">
+    <img src="https://img.shields.io/docsrs/responder">
+    <img src="https://img.shields.io/github/actions/workflow/status/Arturr-H/Responder/rust.yml">
+</p>
 
 # Responder
 
