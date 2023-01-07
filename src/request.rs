@@ -62,11 +62,6 @@ pub mod info {
     impl RequestInfo<'_> {
         /// Parses the request string into valuable information,
         /// like the http-method, path and version
-        ///
-        /// Example:
-        /// ```
-        /// let info:RequestInfo = RequestInfo::parse_req(&request);
-        /// ```
         pub fn parse_req(request: &str) -> Result<RequestInfo, u8> {
             /*- Get the lines -*/
             let mut lines = request.split::<&str>("\r\n");

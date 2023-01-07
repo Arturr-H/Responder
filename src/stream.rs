@@ -50,11 +50,17 @@ impl<'a> Stream<'a> {
     /// Send back an http-response
     /// ## Example
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// /* Repond with text */
-    /// stream.respond(200u16, Respond::new().text("Hello, world!"));
-    ///
+    /// fn endpoint_text(stream:&mut Stream) -> () {
+    ///     stream.respond(200u16, Respond::new().text("Hello, world!"));
+    /// }
+    /// 
     /// /* Repond with json */
-    /// stream.respond(200u16, Respond::new().json("{{\"key\":\"value\"}}"));
+    /// fn endpoint_json(stream:&mut Stream) -> () {
+    ///     stream.respond(200u16, Respond::new().json("{{\"key\":\"value\"}}"));
+    /// }
     /// ```
     pub fn respond(&mut self, status: u16, respond: Respond) {
         /*- Check buffer write access -*/
@@ -122,11 +128,17 @@ impl<'a> Stream<'a> {
     /// Respond with just status code
     /// ## Example
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// /* Repond with 200 (OK) */
-    /// stream.respond_status(200u16); // Response body will look like this: "200 OK"
-    ///
+    /// fn endpoint_200(stream:&mut Stream) -> () {
+    ///     stream.respond_status(200u16); // Response body will look like this: "200 OK"
+    /// }
+    /// 
     /// /* Repond with 600 (status code doesn't exist) */
-    /// stream.respond_status(600u16); // Response body will look like this: "600 Internal error - Missing status code"
+    /// fn endpoint_600(stream:&mut Stream) -> () {
+    ///     stream.respond_status(600u16); // Response body will look like this: "600 Internal error - Missing status code"
+    /// }
     /// ```
     pub fn respond_status(&mut self, status: u16) {
         /*- Check buffer write access -*/
@@ -160,8 +172,12 @@ impl<'a> Stream<'a> {
     /// Respond with JSON payload, takes `payload` as param, which can be any type that can be converted into a `String`
     /// ## Example
     /// ```
-    /// /* Repond with some JSON values using the json!() macro from the `serde_json` crate */
-    /// stream.payload(json!({"key":"value"}));
+    /// use responder::prelude::*;
+    /// 
+    /// /* Repond with some JSON values (TIP: use the `json!()` macro from the `serde_json` crate) */
+    /// fn endpoint_payload(stream:&mut Stream) -> () {
+    ///     stream.payload("{{\"key\": \"value\"}}");
+    /// }
     /// ```
     pub fn payload(&mut self, payload: impl ToString) {
         self.respond(200, Respond::new().json(&payload.to_string()));
@@ -170,8 +186,12 @@ impl<'a> Stream<'a> {
     /// Respond with JSON payload status
     /// ## Example
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// /* Repond with payload status (real http status will be 200) */
-    /// stream.payload_status(200);
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     stream.payload_status(200);
+    /// }
     /// ```
     ///
     /// ## Usecases
@@ -190,7 +210,11 @@ impl<'a> Stream<'a> {
     ///
     /// ## Examples
     /// ```
-    /// stream.get_mut_inner_ref(); // -> &mut TcpStream
+    /// use responder::prelude::*;
+    /// 
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     stream.get_mut_inner_ref(); // -> &mut TcpStream
+    /// }
     /// ```
     pub fn get_mut_inner_ref(&mut self) -> &mut TcpStream {
         &mut self.stream_inner
@@ -201,6 +225,8 @@ impl<'a> Stream<'a> {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// fn redirect_user(stream:&mut Stream) -> () {
     ///     stream.redirect("https://google.com");
     /// }
@@ -244,8 +270,14 @@ impl<'a> Stream<'a> {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// /*- Return if headers were not specified -*/
-    /// if stream.expect_headers(&["authentification"]) { return; };
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     if stream.expect_headers(&["authentification"]) { return; };
+    /// 
+    ///     /* Handle authorized requests... */
+    /// }
     /// ```
     pub fn expect_headers(&mut self, headers: &[&str]) -> bool {
         let request_headers: Vec<&&str> = self.headers.keys().collect();
@@ -272,8 +304,14 @@ impl<'a> Stream<'a> {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// /*- Return if headers were not specified -*/
-    /// if stream.expect_headers(&["authentification"]) { return; };
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     if stream.expect_headers(&["authentification"]) { return; };
+    /// 
+    ///     /* Handle authorized requests... */
+    /// }
     /// ```
     pub fn expect_headers_ignore_caps(&mut self, headers: &[&str]) -> bool {
         let request_headers: Vec<String> = self
@@ -302,7 +340,11 @@ impl<'a> Stream<'a> {
     /*- Respond with file -*/
     /// ## Example
     /// ```
-    /// stream.respond_file(200u16, "/path/to/file.png")
+    /// use responder::prelude::*;
+    /// 
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     stream.respond_file(200u16, "/path/to/file.png")
+    /// }
     /// ```
     pub fn respond_file(&mut self, status: u16, path: &str) -> () {
         /*- Grab the path -*/
@@ -349,10 +391,15 @@ impl<'a> Stream<'a> {
     /*- Get cookies -*/
     /// ## Example
     /// ```
-    /// let cookies:HashMap<&str, &str> = stream.get_cookies();
+    /// use responder::prelude::*;
+    /// use std::collections::HashMap;
+    /// 
+    /// fn endpoint(stream:&mut Stream) -> () {
+    ///     let cookies:HashMap<&str, &str> = stream.get_cookies();
     ///
-    /// /* Try get some cookie */
-    /// let token = cookies.get("token").unwrap();
+    ///     /* Try get some cookie */
+    ///     let token = cookies.get("token").unwrap();
+    /// }
     /// ```
     pub fn get_cookies(&self) -> HashMap<&str, &str> {
         let mut cookies: HashMap<&str, &str> = HashMap::new();

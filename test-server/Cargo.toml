@@ -8,5 +8,5 @@ edition = "2021"
 responder = { path = "../" }
 
 [[bin]]
-name = "my-project"
+name = "test-server"
 path = "src/main.rs"

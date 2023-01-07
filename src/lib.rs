@@ -89,6 +89,8 @@ pub struct Server {
 ///
 /// ## Examples
 /// ```
+/// use responder::prelude::*;
+/// 
 /// /*- Initiaize routes -*/
 /// let routes = &[
 ///     Route::Stack("nest1", &[
@@ -97,7 +99,7 @@ pub struct Server {
 ///             Route::Get("value1", |stream| {}),
 ///             Route::Get("value2", |stream| {}),
 ///         ]),
-///         Route::ControlledStack(origin_control, "admin", &[
+///         Route::ControlledStack(|stream| { true }, "admin", &[
 ///             Route::Get("self-destruct", |stream| {})
 ///         ])
 ///     ]),
@@ -528,15 +530,19 @@ impl<'f> Server {
     ///
     /// ## Example:
     /// ```
+    /// use responder::prelude::*;
+    /// let routes = &[];
+    /// 
     /// Server::new()
     ///     .routes(routes)
     ///     .address("127.0.0.1")
     ///     .port(8080)
     ///     .threads(8)
     ///     .serve("./static")
-    ///     .not_found("./static/404.html")
-    ///     .start()
-    ///     .unwrap();
+    ///     .not_found("./static/404.html");
+    /// /* add these */
+    ///     // .start()
+    ///     // .unwrap();
     /// ```
     pub fn start(self) -> Result<(), ConfigError> {
         /*- Get port and address -*/

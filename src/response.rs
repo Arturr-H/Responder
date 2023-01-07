@@ -80,6 +80,8 @@ pub const STATUS_CODES: &[(&u16, &str); 58] = &[
 ///
 /// ## Examples
 /// ```
+/// use responder::prelude::*;
+/// 
 /// let text_response = Respond::new().text("Hello, world!");
 /// let json_response = Respond::new().json("{{\"key\": \"value\"}}");
 /// ```
@@ -116,11 +118,6 @@ pub enum ImageType {
 /// Respond with a 404 page, will firstly check
 /// if `config.not_found` exists, and grab 404 page path
 /// from there, else it will just send 404 as a status code
-///
-/// ## Example
-/// ```
-/// not_found(&mut stream, config);
-/// ```
 pub fn not_found(stream: &mut Stream, config: Server) {
     /*- If 404 page is provided -*/
     if let Some(page) = config.not_found {
@@ -186,6 +183,8 @@ impl Respond {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// Respond::new().text("Hello, world!");
     /// ```
     pub fn text(&mut self, with: &str) -> Self {
@@ -202,6 +201,7 @@ impl Respond {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
     /// Respond::new().json("{{\"hello\":\"world!\"}}");
     /// ```
     ///
@@ -219,6 +219,8 @@ impl Respond {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// 
     /// Respond::new().html("<html><body><h1>Hello!</h1></body></html>");
     /// ```
     ///
@@ -249,6 +251,9 @@ impl Respond {
     ///
     /// ## Examples
     /// ```
+    /// use responder::prelude::*;
+    /// use responder::response::ResponseType;
+    /// 
     /// Respond::new().content("<html><body><h1>Hello!</h1></body></html>", ResponseType::Html);
     /// ```
     ///
