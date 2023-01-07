@@ -90,7 +90,7 @@ pub struct Server {
 /// ## Examples
 /// ```
 /// use responder::prelude::*;
-/// 
+///
 /// /*- Initiaize routes -*/
 /// let routes = &[
 ///     Route::Stack("nest1", &[
@@ -532,7 +532,7 @@ impl<'f> Server {
     /// ```
     /// use responder::prelude::*;
     /// let routes = &[];
-    /// 
+    ///
     /// Server::new()
     ///     .routes(routes)
     ///     .address("127.0.0.1")

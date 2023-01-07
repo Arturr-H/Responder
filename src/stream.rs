@@ -51,12 +51,12 @@ impl<'a> Stream<'a> {
     /// ## Example
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /* Repond with text */
     /// fn endpoint_text(stream:&mut Stream) -> () {
     ///     stream.respond(200u16, Respond::new().text("Hello, world!"));
     /// }
-    /// 
+    ///
     /// /* Repond with json */
     /// fn endpoint_json(stream:&mut Stream) -> () {
     ///     stream.respond(200u16, Respond::new().json("{{\"key\":\"value\"}}"));
@@ -129,12 +129,12 @@ impl<'a> Stream<'a> {
     /// ## Example
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /* Repond with 200 (OK) */
     /// fn endpoint_200(stream:&mut Stream) -> () {
     ///     stream.respond_status(200u16); // Response body will look like this: "200 OK"
     /// }
-    /// 
+    ///
     /// /* Repond with 600 (status code doesn't exist) */
     /// fn endpoint_600(stream:&mut Stream) -> () {
     ///     stream.respond_status(600u16); // Response body will look like this: "600 Internal error - Missing status code"
@@ -173,7 +173,7 @@ impl<'a> Stream<'a> {
     /// ## Example
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /* Repond with some JSON values (TIP: use the `json!()` macro from the `serde_json` crate) */
     /// fn endpoint_payload(stream:&mut Stream) -> () {
     ///     stream.payload("{{\"key\": \"value\"}}");
@@ -187,7 +187,7 @@ impl<'a> Stream<'a> {
     /// ## Example
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /* Repond with payload status (real http status will be 200) */
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     stream.payload_status(200);
@@ -211,7 +211,7 @@ impl<'a> Stream<'a> {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     stream.get_mut_inner_ref(); // -> &mut TcpStream
     /// }
@@ -226,7 +226,7 @@ impl<'a> Stream<'a> {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// fn redirect_user(stream:&mut Stream) -> () {
     ///     stream.redirect("https://google.com");
     /// }
@@ -271,11 +271,11 @@ impl<'a> Stream<'a> {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /*- Return if headers were not specified -*/
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     if stream.expect_headers(&["authentification"]) { return; };
-    /// 
+    ///
     ///     /* Handle authorized requests... */
     /// }
     /// ```
@@ -305,11 +305,11 @@ impl<'a> Stream<'a> {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// /*- Return if headers were not specified -*/
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     if stream.expect_headers(&["authentification"]) { return; };
-    /// 
+    ///
     ///     /* Handle authorized requests... */
     /// }
     /// ```
@@ -341,7 +341,7 @@ impl<'a> Stream<'a> {
     /// ## Example
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     stream.respond_file(200u16, "/path/to/file.png")
     /// }
@@ -393,7 +393,7 @@ impl<'a> Stream<'a> {
     /// ```
     /// use responder::prelude::*;
     /// use std::collections::HashMap;
-    /// 
+    ///
     /// fn endpoint(stream:&mut Stream) -> () {
     ///     let cookies:HashMap<&str, &str> = stream.get_cookies();
     ///

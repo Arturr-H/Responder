@@ -81,7 +81,7 @@ pub const STATUS_CODES: &[(&u16, &str); 58] = &[
 /// ## Examples
 /// ```
 /// use responder::prelude::*;
-/// 
+///
 /// let text_response = Respond::new().text("Hello, world!");
 /// let json_response = Respond::new().json("{{\"key\": \"value\"}}");
 /// ```
@@ -184,7 +184,7 @@ impl Respond {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// Respond::new().text("Hello, world!");
     /// ```
     pub fn text(&mut self, with: &str) -> Self {
@@ -220,7 +220,7 @@ impl Respond {
     /// ## Examples
     /// ```
     /// use responder::prelude::*;
-    /// 
+    ///
     /// Respond::new().html("<html><body><h1>Hello!</h1></body></html>");
     /// ```
     ///
@@ -253,7 +253,7 @@ impl Respond {
     /// ```
     /// use responder::prelude::*;
     /// use responder::response::ResponseType;
-    /// 
+    ///
     /// Respond::new().content("<html><body><h1>Hello!</h1></body></html>", ResponseType::Html);
     /// ```
     ///
