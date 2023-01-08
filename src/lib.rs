@@ -31,7 +31,7 @@ pub use stream::Stream;
 
 /*- Constants -*/
 const _DATA_BUF_INIT: usize = 1024usize;
-const DATA_BUF_POST_INIT: usize = 65536usize;
+const DATA_BUF_POST_INIT: usize = u16::MAX as usize;
 
 /*- Loading files will check if they're already cached -*/
 lazy_static! {
@@ -127,7 +127,8 @@ pub enum Route {
 /*- Functions -*/
 fn handle_req(tcp_stream: TcpStream, config: &Server) {
     /*- Data buffer -*/
-    let buffer: &mut Vec<u8> = &mut vec![0u8; config.init_buf.unwrap_or(DATA_BUF_POST_INIT)];
+    let mut a = Vec::with_capacity(config.init_buf.unwrap_or(_DATA_BUF_INIT));
+    let buffer: &mut [u8] = a.as_mut_slice();
     let mut stream = Stream::from(tcp_stream);
 
     /*- Set CORS -*/
