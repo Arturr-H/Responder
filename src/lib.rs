@@ -127,8 +127,7 @@ pub enum Route {
 /*- Functions -*/
 fn handle_req(tcp_stream: TcpStream, config: &Server) {
     /*- Data buffer -*/
-    let mut a = Vec::with_capacity(config.init_buf.unwrap_or(_DATA_BUF_INIT));
-    let buffer: &mut [u8] = a.as_mut_slice();
+    let buffer: &mut Vec<u8> = &mut vec![0u8; config.init_buf.unwrap_or(DATA_BUF_POST_INIT)];
     let mut stream = Stream::from(tcp_stream);
 
     /*- Set CORS -*/
