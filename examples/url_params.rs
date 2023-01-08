@@ -29,7 +29,7 @@ fn api_endpoint_with_url_params(stream: &mut Stream) -> () {
         Respond::new().text(&format!(
             "{:?}",
             /*- Params is a hashmap, just send all keys and values in it -*/
-            &stream.params
+            &stream.params()
         )),
     );
 }

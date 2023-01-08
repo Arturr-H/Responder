@@ -33,16 +33,16 @@ pub struct Stream<'lf> {
 
     /// Body is only used in POST requests. Often used for sending & recieving
     /// big chunks of data like images or files.
-    pub body: String,
+    body: String,
 
     /// URL-parameters which will be set in routes by using :_: in tail
-    pub params: HashMap<String, String>,
+    params: HashMap<String, String>,
 
     /// Header keys and values which will specified in fetch requests
-    pub headers: HashMap<&'lf str, &'lf str>,
+    headers: HashMap<&'lf str, &'lf str>,
 
     /// Cors
-    pub cors: bool,
+    cors: bool,
 }
 
 /*- Method implementations -*/
@@ -280,7 +280,7 @@ impl<'a> Stream<'a> {
     /// }
     /// ```
     pub fn expect_headers(&mut self, headers: &[&str]) -> bool {
-        let request_headers: Vec<&&str> = self.headers.keys().collect();
+        let request_headers: Vec<&&str> = self.headers().keys().collect();
 
         for expected_header in headers {
             if !request_headers.contains(&expected_header) {
@@ -421,6 +421,27 @@ impl<'a> Stream<'a> {
         };
 
         cookies
+    }
+
+    /*- Getters -*/
+    /// Aquire a reference to the body string
+    pub fn body(&self) -> &String {
+        &self.body
+    }
+
+    /// Aquire a reference to the URL-parameters
+    pub fn params(&self) -> &HashMap<String, String> {
+        &self.params
+    }
+
+    /// Aquire a reference to the request headers
+    pub fn headers(&self) -> &HashMap<&str, &str> {
+        &self.headers
+    }
+
+    /// Should not be used. Is only used internally during startup
+    pub fn enable_cors(&mut self) -> () {
+        self.cors = true
     }
 }
 

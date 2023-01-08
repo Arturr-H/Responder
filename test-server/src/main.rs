@@ -29,7 +29,7 @@ fn url_params(stream:&mut Stream) -> () {
     stream.respond(200, Respond::new().json(
         &format!(
             "{{\"args\":{:?}}}",
-            stream.params.values()
+            stream.params().values()
         )
     ));
 }
@@ -39,7 +39,7 @@ fn headers(stream:&mut Stream) -> () {
     stream.respond(200, Respond::new().json(
         &format!(
             "{{\"args\":{:?}}}",
-            stream.headers
+            stream.headers()
         )
     ));
 }
@@ -49,7 +49,7 @@ fn body(stream:&mut Stream) -> () {
     stream.respond(
         200,
         Respond::new().text(
-            &stream.body
+            &stream.body()
         )
     );
 }

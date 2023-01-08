@@ -14,8 +14,6 @@ Easy to use, easy to set up. Here's an example of a simple web-server:
 use responder::prelude::*;
 
 fn main() {
-
-    /*- Initiaize routes -*/
     let routes = &[
         Route::Stack("path", &[
             Route::Get("endpoint", endpoint),
@@ -26,7 +24,6 @@ fn main() {
         ]),
     ];
 
-    /*- Initiaize server -*/
     Server::new()
         // This will be localhost, use 
         // 0.0.0.0 if using e.g. docker
@@ -64,10 +61,10 @@ fn endpoint(stream:&mut Stream) -> () {
 /* Will respond with secret JSON data if request */
 fn endpoint_2(stream:&mut Stream) -> () {
     /* Request data */
-    let headers    = &stream.headers;
+    let headers    = &stream.headers();
     let cookies    = &stream.get_cookies();
-    let url_params = &stream.params;
-    let body       = &stream.body;
+    let url_params = &stream.params();
+    let body       = &stream.body();
 
     /* Check if request header "pin_code" is correct */
     if let Some(pin_code) = headers.get("pin_code") {

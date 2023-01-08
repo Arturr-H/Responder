@@ -32,7 +32,7 @@ fn test(stream: &mut Stream) -> () {
 /*- If the request has the header "Host", we accept
 the request, otherwise we'll cancel it -*/
 fn origin_control_function(stream: &mut Stream) -> bool {
-    match stream.headers.get("Host") {
+    match stream.headers().get("Host") {
         Some(host) => {
             /*- One important think to keep in mind is that this origin control is
             very weak and easy to bypass. You will need to implement more than

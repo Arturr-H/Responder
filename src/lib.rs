@@ -132,7 +132,7 @@ fn handle_req(tcp_stream: TcpStream, config: &Server) {
 
     /*- Set CORS -*/
     if config.cors {
-        stream.cors = true;
+        stream.enable_cors();
     };
 
     /*- Read data into buffer -*/
